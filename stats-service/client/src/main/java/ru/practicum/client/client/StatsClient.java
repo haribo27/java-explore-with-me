@@ -20,14 +20,14 @@ public class StatsClient {
     private final RestTemplate restTemplate;
 
     public void recordRequest(HitRequestDto recordDto) {
-        String hit_url = "http://localhost:9090/hit";
-        restTemplate.postForEntity(hit_url, recordDto, Void.class);
+        String hitUrl = "http://localhost:9090/hit";
+        restTemplate.postForEntity(hitUrl, recordDto, Void.class);
     }
 
     public ResponseEntity<List<HitStatsDto>> getStats(String start, String end, String[] uris, Boolean unique) {
-        String BASE_URL = "http://localhost:9090/stats";
+        String baseUrl = "http://localhost:9090/stats";
 
-        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(BASE_URL)
+        UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(baseUrl)
                 .queryParam("start", start)
                 .queryParam("end", end);
 
