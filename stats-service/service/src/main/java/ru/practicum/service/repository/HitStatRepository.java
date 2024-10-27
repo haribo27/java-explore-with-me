@@ -16,8 +16,8 @@ public interface HitStatRepository extends JpaRepository<Hit, Long> {
             "ELSE COUNT(h.ip) END)) " +
             "FROM Hit h " +
             "WHERE h.timestamp BETWEEN :start AND :end " +
-            "GROUP BY h.app, h.uri " +
-            "ORDER BY h.timestamp DESC")
+            "GROUP BY h.app, h.uri, h.timestamp " +
+            "ORDER BY h.timestamp desc ")
     List<HitStatsDto> getStatsWithoutUris(@Param("start") LocalDateTime start,
                                           @Param("end") LocalDateTime end,
                                           @Param("unique") Boolean unique);
@@ -28,8 +28,8 @@ public interface HitStatRepository extends JpaRepository<Hit, Long> {
             "FROM Hit h " +
             "WHERE h.timestamp BETWEEN :start AND :end " +
             "AND h.uri IN :uris " +
-            "GROUP BY h.app, h.uri " +
-            "ORDER BY h.timestamp DESC")
+            "GROUP BY h.app, h.uri, h.timestamp " +
+            "ORDER BY h.timestamp desc ")
     List<HitStatsDto> getStatsWithUris(@Param("start") LocalDateTime start,
                                        @Param("end") LocalDateTime end,
                                        @Param("uris") List<String> uris,
