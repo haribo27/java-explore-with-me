@@ -10,6 +10,7 @@ import ru.practicum.service.exception.IncorrectDateParam;
 import ru.practicum.service.mapper.HitMapper;
 import ru.practicum.service.model.Hit;
 import ru.practicum.service.repository.HitStatRepository;
+import ru.practicum.service.util.DecodeDate;
 import ru.practicum.service.util.StringToLocalDateTime;
 
 import java.time.LocalDateTime;
@@ -36,6 +37,9 @@ public class HitStatServiceImpl implements HitStatService {
     public List<HitStatsDto> getStats(String start, String end, String[] uris, Boolean unique) {
         log.info("Get hit statistics with params: start: {}, end: {}, uris: {}, unique: {}",
                 start, end, uris, unique);
+        log.info("Decoding start and end time");
+        start = DecodeDate.decodeDate(start);
+        end = DecodeDate.decodeDate(end);
         LocalDateTime startDate = StringToLocalDateTime.stringToLocalDateTime(start);
         LocalDateTime endDate = StringToLocalDateTime.stringToLocalDateTime(end);
         if (endDate.isBefore(startDate)) {
