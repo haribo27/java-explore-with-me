@@ -1,6 +1,7 @@
 package ru.practicum.client.client;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,6 @@ import ru.practicum.client.util.EncodeDate;
 import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.HitStatsDto;
 
-
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -21,13 +21,15 @@ public class StatsClient {
 
     private final RestTemplate restTemplate;
 
+    @Value("${hit-stat-server}")
+    private final String baseUrl;
+
     public void recordRequest(HitRequestDto recordDto) {
-        String hitUrl = "http://localhost:9090/hit";
-        restTemplate.postForEntity(hitUrl, recordDto, Void.class);
+        restTemplate.postForEntity(baseUrl + "/hit", recordDto, Void.class);
     }
 
     public ResponseEntity<List<HitStatsDto>> getStats(String start, String end, String[] uris, Boolean unique) throws UnsupportedEncodingException {
-        String hitStatUrl = "http://localhost:9090/stats";
+        String hitStatUrl = baseUrl + "/stats";
         start = EncodeDate.encodeDate(start);
         end = EncodeDate.encodeDate(end);
 
