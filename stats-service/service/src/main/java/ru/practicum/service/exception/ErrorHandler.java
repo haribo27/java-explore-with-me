@@ -14,4 +14,9 @@ public class ErrorHandler {
     public ResponseEntity<?> handleMethodArgumentNotValidException(Exception e) {
         return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<?> handleIncorrectDateParam(IncorrectDateParam e) {
+        return new ResponseEntity<>(new ErrorResponse(e.getMessage()), HttpStatus.BAD_REQUEST);
+    }
 }

@@ -4,8 +4,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import ru.practicum.dto.HitStatsDto;
 import ru.practicum.dto.HitRequestDto;
+import ru.practicum.dto.HitStatsDto;
+import ru.practicum.service.exception.IncorrectDateParam;
 import ru.practicum.service.mapper.HitMapper;
 import ru.practicum.service.model.Hit;
 import ru.practicum.service.repository.HitStatRepository;
@@ -37,6 +38,15 @@ public class HitStatServiceImpl implements HitStatService {
                 start, end, uris, unique);
         LocalDateTime startDate = StringToLocalDateTime.stringToLocalDateTime(start);
         LocalDateTime endDate = StringToLocalDateTime.stringToLocalDateTime(end);
-        return hitStatRepository.getStats(startDate, endDate, List.of(uris), unique);
+        if (endDate.isBefore(startDate)) {
+            log.info("Check that start time must be equal endDate or == startDate");
+            throw new IncorrectDateParam("Start time must be before endtime");
+        }
+        if (uris == null || uris.length == 0) {
+            log.info("Getting hit statistic without uris");
+            return hitStatRepository.getStatsWithoutUris(startDate, endDate, unique);
+        }
+        log.info("Getting hit statistics with uris");
+        return hitStatRepository.getStatsWithUris(startDate, endDate, List.of(uris), unique);
     }
 }

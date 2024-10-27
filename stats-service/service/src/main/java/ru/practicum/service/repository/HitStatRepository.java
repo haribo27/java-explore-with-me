@@ -11,16 +11,29 @@ import java.util.List;
 
 public interface HitStatRepository extends JpaRepository<Hit, Long> {
 
-    @Query("SELECT h.app,h.uri, " +
+    @Query("SELECT new ru.practicum.dto.HitStatsDto(h.app,h.uri, " +
             "(CASE WHEN :unique = true THEN COUNT(DISTINCT h.ip) " +
-            "ELSE COUNT(h.ip) END) " +
+            "ELSE COUNT(h.ip) END)) " +
+            "FROM Hit h " +
+            "WHERE h.timestamp BETWEEN :start AND :end " +
+            "GROUP BY h.app, h.uri " +
+            "ORDER BY h.uri")
+    List<HitStatsDto> getStatsWithoutUris(@Param("start") LocalDateTime start,
+                                          @Param("end") LocalDateTime end,
+                                          @Param("unique") Boolean unique);
+
+    @Query("SELECT new ru.practicum.dto.HitStatsDto(h.app,h.uri, " +
+            "(CASE WHEN :unique = true THEN COUNT(DISTINCT h.ip) " +
+            "ELSE COUNT(h.ip) END)) " +
             "FROM Hit h " +
             "WHERE h.timestamp BETWEEN :start AND :end " +
             "AND h.uri IN :uris " +
             "GROUP BY h.app, h.uri " +
             "ORDER BY h.uri")
-    List<HitStatsDto> getStats(@Param("start") LocalDateTime start,
-                               @Param("end") LocalDateTime end,
-                               @Param("uris") List<String> uris,
-                               @Param("unique") Boolean unique);
+    List<HitStatsDto> getStatsWithUris(@Param("start") LocalDateTime start,
+                                       @Param("end") LocalDateTime end,
+                                       @Param("uris") List<String> uris,
+                                       @Param("unique") Boolean unique);
+
+
 }
