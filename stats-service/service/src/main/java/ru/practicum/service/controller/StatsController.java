@@ -2,19 +2,19 @@ package ru.practicum.service.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.HitStatsDto;
 import ru.practicum.service.service.HitStatService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-@Validated
 public class StatsController {
 
     private final HitStatService statsService;
@@ -27,11 +27,12 @@ public class StatsController {
     }
 
     @GetMapping("/stats")
-    public ResponseEntity<List<HitStatsDto>> getStats(@RequestParam(value = "start") String start,
-                                                      @RequestParam(value = "end") String end,
+    public ResponseEntity<List<HitStatsDto>> getStats(@RequestParam(value = "start")
+                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                                      @RequestParam(value = "end")
+                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
                                                       @RequestParam(value = "uris", required = false) String[] uris,
                                                       @RequestParam(value = "unique", defaultValue = "false") boolean unique) {
-        return new ResponseEntity<>(statsService.getStats(start, end, uris, unique),
-                HttpStatus.OK);
+        return ResponseEntity.ok(statsService.getStats(start, end, uris, unique));
     }
 }
