@@ -22,7 +22,7 @@ public class StatsController {
     @PostMapping("/hit")
     public ResponseEntity<String> saveEndpointHit(@RequestBody @Valid HitRequestDto request) {
         statsService.saveEndpointHit(request);
-        return new ResponseEntity<>("Информация сохранена",
+        return new ResponseEntity<>(" Информация сохранена",
                 HttpStatus.CREATED);
     }
 
