@@ -206,7 +206,7 @@ public class EventServiceImpl implements EventService {
                 }
                 break;
             case "REJECT_EVENT":
-                if (event.getState().equals(PENDING)) {
+                if (event.getState().equals(PUBLISHED)) {
                     event.setState(CANCELED);
                 } else {
                     throw new ConditionsAreNotMet("Cannot reject the event because " +
