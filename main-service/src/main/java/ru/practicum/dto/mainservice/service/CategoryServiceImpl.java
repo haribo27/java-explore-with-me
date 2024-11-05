@@ -36,7 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
 
     @Override
     public CategoryDto updateCategory(long catId, RequestCategoryDto requestCategoryDto) {
-        // TODO ДОДЕЛАТЬ 409 ОШИБКУ СВЯЗАННУЮ С СОБЫТИЯМИ.
+        // TODO ДОДЕЛАТЬ 409 ОШИБКУ СВЯЗАННУЮ С СОБЫТИЯМИ .
         log.info("Updating category with id: {}, updated category: {}", catId, requestCategoryDto);
         isCategoryExists(requestCategoryDto);
         Category category = categoryRepository.findById(catId)
