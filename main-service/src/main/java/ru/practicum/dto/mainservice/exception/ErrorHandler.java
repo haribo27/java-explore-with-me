@@ -5,6 +5,7 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
@@ -56,6 +57,14 @@ public class ErrorHandler {
     public ResponseEntity<?> handleIncorrectInputArguments(IncorrectInputArguments e) {
         log.info("Logging incorrect input arguments {}, status {}", e.getMessage(), 400);
         return new ResponseEntity<>(new ErrorResponse("400", "Incorrect input arguments",
+                e.getMessage()),
+                HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<?> handleMissingRequestParam(MissingServletRequestParameterException e) {
+        log.info("Logging missing required request param {}, status {}", e.getMessage(), 400);
+        return new ResponseEntity<>(new ErrorResponse("400", "Missing required request param",
                 e.getMessage()),
                 HttpStatus.BAD_REQUEST);
     }

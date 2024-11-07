@@ -30,7 +30,6 @@ public class AdminEventController {
                                                 @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                                 @RequestParam(value = "from", defaultValue = "0") Integer from,
                                                 @RequestParam(value = "size", defaultValue = "10") Integer size) {
-        System.out.println("kek");
         return new ResponseEntity<>(eventService.findEventsByParams(users, states, categories,
                 rangeStart, rangeEnd, from, size),
                 HttpStatus.OK);

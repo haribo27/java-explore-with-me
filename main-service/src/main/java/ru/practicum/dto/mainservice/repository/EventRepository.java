@@ -33,7 +33,7 @@ public interface EventRepository extends JpaRepository<Event, Long>, QuerydslPre
             "    SELECT COUNT(*) " +
             "    FROM requests " +
             "    WHERE event_id = events.id " +
-            //   "    AND status = 'CONFIRMED'" +
+            "    AND status = 'CONFIRMED'" +
             ")" +
             "WHERE id = :eventId", nativeQuery = true)
     void updateConfirmedRequests(long eventId);

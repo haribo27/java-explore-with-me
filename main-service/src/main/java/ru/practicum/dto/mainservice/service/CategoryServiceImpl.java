@@ -38,7 +38,6 @@ public class CategoryServiceImpl implements CategoryService {
     public CategoryDto updateCategory(long catId, RequestCategoryDto requestCategoryDto) {
         // TODO ДОДЕЛАТЬ 409 ОШИБКУ СВЯЗАННУЮ С СОБЫТИЯМИ .
         log.info("Updating category with id: {}, updated category: {}", catId, requestCategoryDto);
-        isCategoryExists(requestCategoryDto);
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + catId + " was not found"));
         categoryMapper.updateCategory(requestCategoryDto, category);

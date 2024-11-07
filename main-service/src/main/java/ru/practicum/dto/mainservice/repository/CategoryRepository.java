@@ -12,8 +12,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query(value = "SELECT c.* " +
             "from categories as c " +
-            "offset ?1 " +
-            "limit ?2 ",
+            "limit ?2 " +
+            "offset ?1 ",
              nativeQuery = true)
     List<Category> findCategoryBy(Integer from, Integer size);
 

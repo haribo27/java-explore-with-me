@@ -58,17 +58,7 @@ public class EventServiceImpl implements EventService {
         event.setInitiator(initiator);
         log.info("Set created date {}", LocalDateTime.now());
         event.setCreatedOn(LocalDateTime.now());
-
-        log.info("Set event state to event");
-        if (event.getRequestModeration()) {
-            log.info("Event need request moderation, state: {}", EventState.PENDING);
-            event.setState(EventState.PENDING);
-        } else {
-            log.info("Dont need moderation, state: {}", PUBLISHED);
-            event.setState(PUBLISHED);
-            log.info("Setting published date time {}", LocalDateTime.now());
-            event.setPublishedOn(LocalDateTime.now());
-        }
+        event.setState(PENDING);
         log.info("Saving event: {}", event);
         event = eventRepository.save(event);
         return eventMapper.mapToEventFullDto(event);
@@ -112,6 +102,7 @@ public class EventServiceImpl implements EventService {
         if (size != null) {
             query.limit(size);
         }
+        List<Event> test = query.fetch();
         return query.fetch()
                 .stream().map(eventMapper::mapToEventFullDto)
                 .toList();
@@ -176,7 +167,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto adminUpdateEvent(UpdateEventAdminRequest updateRequest, long eventId) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
-        if (updateRequest.getEventDate() != null) {
+        if (updateRequest.getEventDate() != null && event.getPublishedOn() != null) {
             checkEventDateIsValid(updateRequest, event);
         }
         eventMapper.updateEventAdminRequest(updateRequest, event);
@@ -207,10 +198,10 @@ public class EventServiceImpl implements EventService {
                 break;
             case "REJECT_EVENT":
                 if (event.getState().equals(PUBLISHED)) {
+                    throw new ConditionsAreNotMet("You cant reject PUBLISHED event");
+                }
+                if (event.getState().equals(PENDING)) {
                     event.setState(CANCELED);
-                } else {
-                    throw new ConditionsAreNotMet("Cannot reject the event because " +
-                            "it's not in the right state: PUBLISHED or CANCELED");
                 }
                 break;
         }

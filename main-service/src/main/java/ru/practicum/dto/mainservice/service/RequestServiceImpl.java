@@ -109,17 +109,27 @@ public class RequestServiceImpl implements RequestService {
 
         int limit = countRequestsLimit(event);
 
-        List<Request> filteredRequests = requests.stream()
+        List<Request> acceptedRequests = requests.stream()
                 .filter(request -> dto.getRequestIds().contains(request.getId()))
                 .limit(limit)
                 .toList();
 
-        if (filteredRequests.stream().anyMatch(request -> request.getStatus().equals(CONFIRMED) || request.getStatus().equals(REJECTED))) {
+        List<Request> requestsToCancel = requests.stream()
+                .filter(request -> !acceptedRequests.contains(request))
+                .toList();
+
+        if (acceptedRequests.stream().anyMatch(request -> request.getStatus().equals(CONFIRMED) || request.getStatus().equals(REJECTED))) {
             throw new ConditionsAreNotMet("CONFIRMED or REJECTED request can't updated");
         }
 
-        filteredRequests.forEach(request -> {
+        acceptedRequests.forEach(request -> {
             request.setStatus(dto.getStatus());
+            requestRepository.save(request);
+            eventRepository.updateConfirmedRequests(eventId);
+        });
+
+        requestsToCancel.forEach(request -> {
+            request.setStatus(REJECTED);
             requestRepository.save(request);
             eventRepository.updateConfirmedRequests(eventId);
         });
@@ -183,7 +193,7 @@ public class RequestServiceImpl implements RequestService {
             log.debug("If event state not equals PUBLISHED you cat create new request");
             throw new ConditionsAreNotMet("You can't participate in an unpublished event");
         }
-        if (event.getParticipantLimit() > 0) {
+        /*if (event.getParticipantLimit() > 0) {
             log.debug("Check partitions limit of event");
             long requestsCount = requestRepository.getPartitionsRequestToEvent(eventId);
             log.debug("Requests count: {}", requestsCount);
@@ -191,7 +201,7 @@ public class RequestServiceImpl implements RequestService {
                 log.debug("Requests count = partitions limit, cant create request");
                 throw new ConditionsAreNotMet("The limit of participation requests has been reached.");
             }
-        }
+        }*/
         if (!event.getRequestModeration()) {
             log.info("Moderation required = false ? request state: approved");
             request.setStatus(CONFIRMED);
