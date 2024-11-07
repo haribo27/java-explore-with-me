@@ -8,7 +8,7 @@ import ru.practicum.dto.mainservice.service.RequestService;
 
 @RestController
 @RequiredArgsConstructor
-public class RequestController {
+public class PrivateRequestController {
 
     private final RequestService requestService;
 

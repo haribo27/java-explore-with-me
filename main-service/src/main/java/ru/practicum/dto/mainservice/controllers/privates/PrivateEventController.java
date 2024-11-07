@@ -13,7 +13,7 @@ import ru.practicum.dto.mainservice.service.EventService;
 @RestController
 @RequestMapping("/users")
 @RequiredArgsConstructor
-public class EventController {
+public class PrivateEventController {
 
     private final EventService eventService;
 
@@ -59,7 +59,8 @@ public class EventController {
     public ResponseEntity<?> updateRequestsStatusUsersOwnEvents(@RequestBody EventRequestStatusUpdateRequest dto,
                                                                 @PathVariable(name = "userId") long userId,
                                                                 @PathVariable(name = "eventId") long eventId) {
-        return new ResponseEntity<>(eventService.updateRequestsStatusUsersOwnEvents(dto, userId, eventId),
+        eventService.updateRequestsStatusUsersOwnEvents(dto, userId, eventId);
+        return new ResponseEntity<>(eventService.getUpdatedRequestStatus(dto.getRequestIds(),userId, eventId),
                 HttpStatus.OK);
     }
 }

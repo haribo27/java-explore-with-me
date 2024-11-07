@@ -28,9 +28,9 @@ public class StatsController {
 
     @GetMapping("/stats")
     public ResponseEntity<List<HitStatsDto>> getStats(@RequestParam(value = "start")
-                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime start,
+                                                      String start,
                                                       @RequestParam(value = "end")
-                                                      @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime end,
+                                                      String end,
                                                       @RequestParam(value = "uris", required = false) String[] uris,
                                                       @RequestParam(value = "unique", defaultValue = "false") boolean unique) {
         return ResponseEntity.ok(statsService.getStats(start, end, uris, unique));

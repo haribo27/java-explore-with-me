@@ -45,7 +45,7 @@ CREATE TABLE IF NOT EXISTS requests
     created      TIMESTAMP                               NOT NULL,
     event_id     BIGINT                                  NOT NULL,
     requester_id BIGINT                                  NOT NULL,
-    status       varchar(50) check (requests.status in ('PENDING', 'CONFIRMED', 'REJECTED')),
+    status       varchar(50) check (requests.status in ('PENDING', 'CONFIRMED', 'CANCELED', 'REJECTED')),
 
     PRIMARY KEY (id),
     CONSTRAINT ref_user_fk FOREIGN KEY (requester_id) REFERENCES users (id),

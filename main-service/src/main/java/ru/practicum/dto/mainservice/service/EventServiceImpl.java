@@ -3,10 +3,12 @@ package ru.practicum.dto.mainservice.service;
 import com.querydsl.jpa.impl.JPAQuery;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.HitStatsDto;
 import ru.practicum.dto.mainservice.dto.event.*;
 import ru.practicum.dto.mainservice.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.mainservice.dto.request.ParticipationRequestDto;
@@ -18,9 +20,13 @@ import ru.practicum.dto.mainservice.model.*;
 import ru.practicum.dto.mainservice.repository.CategoryRepository;
 import ru.practicum.dto.mainservice.repository.EventRepository;
 import ru.practicum.dto.mainservice.repository.UserRepository;
+import ru.practicum.dto.mainservice.viewsApiClient.ApiClient;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import static ru.practicum.dto.mainservice.model.EventState.*;
 
@@ -35,6 +41,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final RequestService requestService;
     private final EventMapper eventMapper;
+    private final ApiClient apiClient;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -61,16 +68,16 @@ public class EventServiceImpl implements EventService {
         event.setState(PENDING);
         log.info("Saving event: {}", event);
         event = eventRepository.save(event);
-        return eventMapper.mapToEventFullDto(event);
+        return eventMapper.mapToEventFullDto(event, new HashMap<>());
     }
 
     @Override
     public List<EventShortDto> findEventsByParams(long userId, Integer from, Integer size) {
         log.info("Find events by params: userid: {}, from: {}, size: {}", userId, from, size);
-        List<Event> resultList = eventRepository.findEvents(userId, from, size);
-        log.info("Result list: {}", resultList);
-        return resultList.stream()
-                .map(eventMapper::mapToShortEventDto)
+        List<Event> findEvents = eventRepository.findEvents(userId, from, size);
+        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
+        return findEvents.stream()
+                .map(event -> eventMapper.mapToShortEventDto(event, viewsMap))
                 .toList();
     }
 
@@ -102,9 +109,10 @@ public class EventServiceImpl implements EventService {
         if (size != null) {
             query.limit(size);
         }
-        List<Event> test = query.fetch();
-        return query.fetch()
-                .stream().map(eventMapper::mapToEventFullDto)
+        List<Event> findEvents = query.fetch();
+        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
+        return findEvents
+                .stream().map(event1 -> eventMapper.mapToEventFullDto(event1, viewsMap))
                 .toList();
     }
 
@@ -113,7 +121,8 @@ public class EventServiceImpl implements EventService {
         log.info("Get full info about user's event");
         Event event = eventRepository.findEventByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
-        return eventMapper.mapToEventFullDto(event);
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
+        return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
     @Override
@@ -144,7 +153,8 @@ public class EventServiceImpl implements EventService {
         }
         event = eventRepository.save(event);
         log.info("Event updated and saved success {}", event);
-        return eventMapper.mapToEventFullDto(event);
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
+        return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
     @Override
@@ -155,11 +165,9 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional
-    public EventRequestStatusUpdateResult updateRequestsStatusUsersOwnEvents(EventRequestStatusUpdateRequest dto, long userId, long eventId) {
+    public void updateRequestsStatusUsersOwnEvents(EventRequestStatusUpdateRequest dto, long userId, long eventId) {
         log.info("Changing status of event's requests. Event owner: {},  Event id: {}", userId, eventId);
         requestService.updateRequestsStatus(dto, userId, eventId);
-        EventRequestStatusUpdateResult test = getUpdatedRequestStatus(dto.getRequestIds(),userId, eventId);
-        return getUpdatedRequestStatus(dto.getRequestIds(),userId, eventId);
     }
 
     @Override
@@ -175,7 +183,8 @@ public class EventServiceImpl implements EventService {
             changeStatusFromRequest(updateRequest, event);
         }
         event = eventRepository.save(event);
-        return eventMapper.mapToEventFullDto(event);
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
+        return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
     private void checkEventDateIsValid(UpdateEventAdminRequest updateRequest, Event event) {
@@ -219,5 +228,83 @@ public class EventServiceImpl implements EventService {
                 .filter(request -> request.getStatus().equals(RequestState.REJECTED))
                 .toList());
         return dto;
+    }
+
+    @Override
+    public List<EventShortDto> findEventsByParamsAndFilter(String text, List<Long> categories, Boolean paid,
+                                                           LocalDateTime rangeStart, LocalDateTime rangeEnd,
+                                                           Boolean onlyAvailable, String sort, Integer from, Integer size) {
+        QEvent event = QEvent.event;
+        JPAQuery<Event> query = new JPAQuery<>(entityManager);
+
+        query.from(event);
+
+        if (rangeEnd != null && rangeEnd.isBefore(rangeStart)) {
+            throw new IncorrectInputArguments("End date of event cant be before start date");
+        }
+
+        if (text != null && !text.isEmpty()) {
+            query.where(event.annotation.containsIgnoreCase(text)
+                    .or(event.description.containsIgnoreCase(text)));
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            query.where(event.category.id.in(categories));
+        }
+
+        if (paid != null) {
+            query.where(event.paid.eq(paid));
+        }
+
+        if (rangeStart != null) {
+            query.where(event.eventDate.goe(rangeStart));
+        } else {
+            query.where(event.eventDate.goe(LocalDateTime.now()));
+        }
+        if (rangeEnd != null) {
+            query.where(event.eventDate.loe(rangeEnd));
+        }
+        if (onlyAvailable != null && onlyAvailable) {
+            query.where(event.confirmedRequests.lt(event.participantLimit));
+        }
+        // todo доделать сортировку
+        /*if ("EVENT_DATE".equalsIgnoreCase(sort)) {
+            query.orderBy(event.eventDate.asc());
+        } else if ("VIEWS".equalsIgnoreCase(sort)) {
+            query.orderBy(event.views.asc());
+        }*/
+
+        if (from != null) {
+            query.offset(from);
+        }
+        if (size != null) {
+            query.limit(size);
+        }
+
+        List<Event> findEvents = query.fetch();
+        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
+        return findEvents.stream().map(event1 -> eventMapper.mapToShortEventDto(event1, viewsMap)).toList();
+    }
+
+    @Override
+    public EventFullDto findById(long id, HttpServletRequest request) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Event with id=" + id + " not found"));
+        if (event.getState().equals(PUBLISHED)) {
+            apiClient.sendHitRequestToApi(request);
+        } else {
+            throw new ConditionsAreNotMet("Event must be PUBLISHED");
+        }
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(id));
+        return eventMapper.mapToEventFullDto(event, viewsMap);
+    }
+
+    public Map<Long, Long> getEventViewsMap(List<Long> eventIds) {
+        List<HitStatsDto> statsList = apiClient.getEventViews(eventIds);
+        return statsList.stream()
+                .collect(Collectors.toMap(
+                        hit -> Long.parseLong(hit.getUri().split("/events/")[1]), // Извлекаем eventId из URI
+                        HitStatsDto::getHits
+                ));
     }
 }

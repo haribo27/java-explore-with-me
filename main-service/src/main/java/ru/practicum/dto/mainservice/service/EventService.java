@@ -1,5 +1,6 @@
 package ru.practicum.dto.mainservice.service;
 
+import jakarta.servlet.http.HttpServletRequest;
 import ru.practicum.dto.mainservice.dto.event.*;
 import ru.practicum.dto.mainservice.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.mainservice.dto.request.ParticipationRequestDto;
@@ -25,10 +26,15 @@ public interface EventService {
 
     List<ParticipationRequestDto> getOwnersEventRequests(long userId, long eventId);
 
-    EventRequestStatusUpdateResult updateRequestsStatusUsersOwnEvents(EventRequestStatusUpdateRequest dto, long userId, long eventId);
+    void updateRequestsStatusUsersOwnEvents(EventRequestStatusUpdateRequest dto, long userId, long eventId);
 
     EventFullDto adminUpdateEvent(UpdateEventAdminRequest updateRequest, long eventId);
 
     EventRequestStatusUpdateResult getUpdatedRequestStatus(List<Long> requestIds,
                                                            long userId, long evenId);
+
+    List<EventShortDto> findEventsByParamsAndFilter(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
+                                                    LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size);
+
+    EventFullDto findById(long id, HttpServletRequest request);
 }

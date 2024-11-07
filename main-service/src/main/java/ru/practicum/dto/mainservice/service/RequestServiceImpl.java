@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.dto.mainservice.dto.event.EventRequestStatusUpdateResult;
 import ru.practicum.dto.mainservice.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.mainservice.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.mainservice.exception.ConditionsAreNotMet;
@@ -11,6 +12,7 @@ import ru.practicum.dto.mainservice.exception.EntityNotFoundException;
 import ru.practicum.dto.mainservice.mapper.RequestMapper;
 import ru.practicum.dto.mainservice.model.Event;
 import ru.practicum.dto.mainservice.model.Request;
+import ru.practicum.dto.mainservice.model.RequestState;
 import ru.practicum.dto.mainservice.model.User;
 import ru.practicum.dto.mainservice.repository.EventRepository;
 import ru.practicum.dto.mainservice.repository.RequestRepository;
@@ -73,7 +75,7 @@ public class RequestServiceImpl implements RequestService {
         log.info("Cancel userId: {} requestId: {}", userId, requestId);
         Request request = requestRepository.findByIdAndRequester_Id(requestId, userId)
                 .orElseThrow(() -> new EntityNotFoundException("Request with id=" + requestId + " not found"));
-        request.setStatus(REJECTED);
+        request.setStatus(CANCELED);
         log.info("Set request state Canceled to request");
         request = requestRepository.save(request);
         log.info("Request updated: {}", request);
@@ -114,12 +116,12 @@ public class RequestServiceImpl implements RequestService {
                 .limit(limit)
                 .toList();
 
-        List<Request> requestsToCancel = requests.stream()
+        List<Request> requestsTorReject = requests.stream()
                 .filter(request -> !acceptedRequests.contains(request))
                 .toList();
 
-        if (acceptedRequests.stream().anyMatch(request -> request.getStatus().equals(CONFIRMED) || request.getStatus().equals(REJECTED))) {
-            throw new ConditionsAreNotMet("CONFIRMED or REJECTED request can't updated");
+        if (acceptedRequests.stream().anyMatch(request -> request.getStatus().equals(CONFIRMED) || request.getStatus().equals(CANCELED))) {
+            throw new ConditionsAreNotMet("CONFIRMED or CANCELED request can't updated");
         }
 
         acceptedRequests.forEach(request -> {
@@ -128,7 +130,7 @@ public class RequestServiceImpl implements RequestService {
             eventRepository.updateConfirmedRequests(eventId);
         });
 
-        requestsToCancel.forEach(request -> {
+        requestsTorReject.forEach(request -> {
             request.setStatus(REJECTED);
             requestRepository.save(request);
             eventRepository.updateConfirmedRequests(eventId);

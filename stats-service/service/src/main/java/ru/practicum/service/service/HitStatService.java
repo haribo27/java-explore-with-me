@@ -10,5 +10,5 @@ public interface HitStatService {
 
     void saveEndpointHit(HitRequestDto request);
 
-    List<HitStatsDto> getStats(LocalDateTime start, LocalDateTime end, String[] uris, Boolean unique);
+    List<HitStatsDto> getStats(String start, String end, String[] uris, Boolean unique);
 }

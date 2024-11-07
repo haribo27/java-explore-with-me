@@ -6,7 +6,8 @@ import java.time.LocalDateTime;
 
 public class DecodeDate {
 
-    public static String decodeDate(LocalDateTime date) {
-        return URLDecoder.decode(String.valueOf(date), StandardCharsets.UTF_8);
+    public static String decodeDate(String date) {
+        String onceDecoded = URLDecoder.decode(date, StandardCharsets.UTF_8);
+        return URLDecoder.decode(onceDecoded, StandardCharsets.UTF_8);
     }
 }
