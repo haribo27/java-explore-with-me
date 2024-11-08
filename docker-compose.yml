@@ -1,7 +1,7 @@
 services:
   stats-service:
     build: stats-service/service
-    image: ewm
+    image: ewm-stats
     container_name: ewm-stats-service
     ports:
       - "9090:9090"
@@ -44,6 +44,7 @@ services:
            condition: service_healthy
     environment:
       - SERVER_PORT=8080
+      - hit-stat-server=http://stats-service:9090
       - SPRING_DATASOURCE_URL=jdbc:postgresql://ewm-db:5432/ewm_events
       - SPRING_DATASOURCE_USERNAME=postgres
       - SPRING_DATASOURCE_PASSWORD=postgres
