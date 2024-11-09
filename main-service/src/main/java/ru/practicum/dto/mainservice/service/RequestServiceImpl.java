@@ -169,7 +169,7 @@ public class RequestServiceImpl implements RequestService {
     private static void setRequestFields(Request request, Event event, User requester) {
         request.setEvent(event);
         request.setRequester(requester);
-        request.setCreated(LocalDateTime.now());
+        request.setCreated(LocalDateTime.now().withNano(0));
         if (event.getParticipantLimit() == 0 || !event.getRequestModeration()) {
             request.setStatus(CONFIRMED);
         } else {
