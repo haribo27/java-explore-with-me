@@ -68,4 +68,11 @@ public class ErrorHandler {
                 e.getMessage()),
                 HttpStatus.BAD_REQUEST);
     }
+
+    @ExceptionHandler
+    public ResponseEntity<?> handleEventStatusInvalid(EventStatusInvalid e) {
+        log.info("Logging event status is invalid: {}, {}", e.getMessage(), 404);
+        return new ResponseEntity<>(new ErrorResponse("404", e.getMessage(), "Event status is invalid"),
+                HttpStatus.NOT_FOUND);
+    }
 }

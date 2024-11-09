@@ -193,7 +193,7 @@ public class RequestServiceImpl implements RequestService {
             log.debug("If event state not equals PUBLISHED you cat create new request");
             throw new ConditionsAreNotMet("You can't participate in an unpublished event");
         }
-        /*if (event.getParticipantLimit() > 0) {
+        if (event.getParticipantLimit() > 0) {
             log.debug("Check partitions limit of event");
             long requestsCount = requestRepository.getPartitionsRequestToEvent(eventId);
             log.debug("Requests count: {}", requestsCount);
@@ -201,7 +201,7 @@ public class RequestServiceImpl implements RequestService {
                 log.debug("Requests count = partitions limit, cant create request");
                 throw new ConditionsAreNotMet("The limit of participation requests has been reached.");
             }
-        }*/
+        }
         if (!event.getRequestModeration()) {
             log.info("Moderation required = false ? request state: approved");
             request.setStatus(CONFIRMED);

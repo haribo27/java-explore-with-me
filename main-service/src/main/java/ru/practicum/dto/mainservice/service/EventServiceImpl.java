@@ -14,6 +14,7 @@ import ru.practicum.dto.mainservice.dto.request.EventRequestStatusUpdateRequest;
 import ru.practicum.dto.mainservice.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.mainservice.exception.ConditionsAreNotMet;
 import ru.practicum.dto.mainservice.exception.EntityNotFoundException;
+import ru.practicum.dto.mainservice.exception.EventStatusInvalid;
 import ru.practicum.dto.mainservice.exception.IncorrectInputArguments;
 import ru.practicum.dto.mainservice.mapper.EventMapper;
 import ru.practicum.dto.mainservice.model.*;
@@ -293,7 +294,7 @@ public class EventServiceImpl implements EventService {
         if (event.getState().equals(PUBLISHED)) {
             apiClient.sendHitRequestToApi(request);
         } else {
-            throw new ConditionsAreNotMet("Event must be PUBLISHED");
+            throw new EventStatusInvalid("Event must be PUBLISHED");
         }
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(id));
         return eventMapper.mapToEventFullDto(event, viewsMap);
