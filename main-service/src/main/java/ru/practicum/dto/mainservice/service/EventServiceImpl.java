@@ -65,7 +65,7 @@ public class EventServiceImpl implements EventService {
         log.info("Set initiator to event {}", initiator);
         event.setInitiator(initiator);
         log.info("Set created date {}", LocalDateTime.now());
-        event.setCreatedOn(LocalDateTime.now());
+        event.setCreatedOn(LocalDateTime.now().withNano(0));
         event.setState(PENDING);
         log.info("Saving event: {}", event);
         event = eventRepository.save(event);
