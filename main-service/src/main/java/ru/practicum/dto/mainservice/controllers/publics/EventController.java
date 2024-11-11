@@ -29,10 +29,11 @@ public class EventController {
                                                            @RequestParam(value = "onlyAvailable", required = false) Boolean onlyAvailable,
                                                            @RequestParam(value = "sort", required = false) String sort,
                                                            @RequestParam(value = "from",defaultValue = "0", required = false) Integer from,
-                                                           @RequestParam(value = "size", defaultValue = "10", required = false) Integer size) {
+                                                           @RequestParam(value = "size", defaultValue = "10", required = false) Integer size,
+                                                           HttpServletRequest request) {
         return new ResponseEntity<>(eventService.findEventsByParamsAndFilter(text, categories, paid,
                 rangeStart, rangeEnd, onlyAvailable,
-                sort, from, size),
+                sort, from, size, request),
                 HttpStatus.OK);
     }
 

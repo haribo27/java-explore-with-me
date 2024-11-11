@@ -34,7 +34,8 @@ public interface EventService {
                                                            long userId, long evenId);
 
     List<EventShortDto> findEventsByParamsAndFilter(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
-                                                    LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from, Integer size);
+                                                    LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from,
+                                                    Integer size,HttpServletRequest request);
 
     EventFullDto findById(long id, HttpServletRequest request);
 }

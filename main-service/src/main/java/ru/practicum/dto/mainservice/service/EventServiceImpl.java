@@ -67,8 +67,8 @@ public class EventServiceImpl implements EventService {
         log.info("Set created date {}", LocalDateTime.now());
         event.setCreatedOn(LocalDateTime.now().withNano(0));
         event.setState(PENDING);
-        log.info("Saving event: {}", event);
         event = eventRepository.save(event);
+        log.info("Saving event: {}, id: {}", event, event.getId());
         return eventMapper.mapToEventFullDto(event, new HashMap<>());
     }
 
@@ -234,7 +234,8 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> findEventsByParamsAndFilter(String text, List<Long> categories, Boolean paid,
                                                            LocalDateTime rangeStart, LocalDateTime rangeEnd,
-                                                           Boolean onlyAvailable, String sort, Integer from, Integer size) {
+                                                           Boolean onlyAvailable, String sort, Integer from,
+                                                           Integer size, HttpServletRequest request) {
         QEvent event = QEvent.event;
         JPAQuery<Event> query = new JPAQuery<>(entityManager);
 
@@ -283,6 +284,7 @@ public class EventServiceImpl implements EventService {
         }
 
         List<Event> findEvents = query.fetch();
+        apiClient.sendHitRequestToApi(request);
         Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
         return findEvents.stream().map(event1 -> eventMapper.mapToShortEventDto(event1, viewsMap)).toList();
     }

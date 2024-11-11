@@ -10,7 +10,6 @@ import ru.practicum.service.exception.IncorrectDateParam;
 import ru.practicum.service.mapper.HitMapper;
 import ru.practicum.service.model.Hit;
 import ru.practicum.service.repository.HitStatRepository;
-import ru.practicum.service.util.DecodeDate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -33,24 +32,20 @@ public class HitStatServiceImpl implements HitStatService {
     }
 
     @Override
-    public List<HitStatsDto> getStats(String start, String end, String[] uris, Boolean unique) {
+    public List<HitStatsDto> getStats(LocalDateTime start, LocalDateTime end, String[] uris, Boolean unique) {
         log.info("Get hit statistics with params: start: {}, end: {}, uris: {}, unique: {}",
                 start, end, uris, unique);
 
-        log.info("Decoding start and end time");
-        LocalDateTime startDate = LocalDateTime.parse(DecodeDate.decodeDate(start));
-        LocalDateTime endDate = LocalDateTime.parse(DecodeDate.decodeDate(end));
-
-        if (endDate.isBefore(startDate)) {
+        if (end.isBefore(start)) {
             log.info("Check that start time must be equal endDate or == startDate");
             throw new IncorrectDateParam("Start time must be before endtime");
         }
 
         if (uris == null || uris.length == 0) {
             log.info("Getting hit statistic without uris");
-            return hitStatRepository.getStatsWithoutUris(startDate, endDate, unique);
+            return hitStatRepository.getStatsWithoutUris(start, end, unique);
         }
         log.info("Getting hit statistics with uris");
-        return hitStatRepository.getStatsWithUris(startDate, endDate, List.of(uris), unique);
+        return hitStatRepository.getStatsWithUris(start, end, List.of(uris), unique);
     }
 }

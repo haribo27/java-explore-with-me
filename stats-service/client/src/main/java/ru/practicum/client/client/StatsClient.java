@@ -8,11 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-import ru.practicum.client.util.EncodeDate;
 import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.HitStatsDto;
 
-import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 @Service
@@ -30,12 +28,12 @@ public class StatsClient {
 
     public ResponseEntity<List<HitStatsDto>> getStats(String start, String end, List<String> uris, Boolean unique) {
         String hitStatUrl = baseUrl + "/stats";
-        try {
+      /*  try {
             start = EncodeDate.encodeDate(start);
             end = EncodeDate.encodeDate(end);
         } catch (UnsupportedEncodingException e) {
             System.err.println("Unsupported encoding: " + e.getMessage());
-        }
+        }*/
 
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(hitStatUrl)
                 .queryParam("start", start)
