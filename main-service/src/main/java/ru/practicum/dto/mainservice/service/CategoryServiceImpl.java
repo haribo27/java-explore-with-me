@@ -18,13 +18,14 @@ import java.util.Optional;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
+@Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
     @Override
+    @Transactional
     public CategoryDto saveCategory(RequestCategoryDto requestCategoryDto) {
         log.info("Saving new category: {}", requestCategoryDto);
         isCategoryExists(requestCategoryDto);
@@ -35,8 +36,8 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    @Transactional
     public CategoryDto updateCategory(long catId, RequestCategoryDto requestCategoryDto) {
-        // TODO ДОДЕЛАТЬ 409 ОШИБКУ СВЯЗАННУЮ С СОБЫТИЯМИ .
         log.info("Updating category with id: {}, updated category: {}", catId, requestCategoryDto);
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + catId + " was not found"));
@@ -47,15 +48,17 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     private void isCategoryExists(RequestCategoryDto requestCategoryDto) {
+        log.info("Check is category: {} exists", requestCategoryDto.getName());
         Optional<Category> isCategoryExists = categoryRepository.findByName(requestCategoryDto.getName());
         if (isCategoryExists.isPresent()) {
+            log.warn("This category {} is already exists", requestCategoryDto.getName());
             throw new ConditionsAreNotMet("Integrity constraint has been violated.");
         }
     }
 
     @Override
+    @Transactional
     public void deleteCategory(long catId) {
-        // TODO ДОДЕЛАТЬ 409 ОШИБКУ СВЯЗАННУЮ С СОБЫТИЯМИ.
         log.info("Deleting category with id: {}", catId);
         Category category = categoryRepository.findById(catId)
                 .orElseThrow(() -> new EntityNotFoundException("Category with id=" + catId + " was not found"));

@@ -10,7 +10,6 @@ import ru.practicum.dto.HitRequestDto;
 import ru.practicum.dto.HitStatsDto;
 
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
@@ -26,12 +25,10 @@ public class ApiClient {
 
     public void sendHitRequestToApi(HttpServletRequest request) {
         log.info("Create request hit to stats service");
-        String ipClient = request.getRemoteAddr();
-        String endPointPath = request.getRequestURI();
         HitRequestDto requestDto = new HitRequestDto();
         requestDto.setApp(appName);
-        requestDto.setIp(ipClient);
-        requestDto.setUri(endPointPath);
+        requestDto.setIp(request.getRemoteAddr());
+        requestDto.setUri(request.getRequestURI());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         requestDto.setTimestamp(LocalDateTime.parse(LocalDateTime.now().format(formatter), formatter));
         log.info("Send request to api {}", requestDto);
@@ -42,7 +39,11 @@ public class ApiClient {
         List<String> eventPaths = ids.stream()
                 .map(id -> "/events/" + id)
                 .toList();
-        return statsClient.getStats(LocalDateTime.of(2024, Month.JANUARY, 1, 0, 0, 0).toString(),
-                LocalDateTime.of(2024, Month.DECEMBER, 31, 0, 0, 0).toString(), eventPaths, true).getBody();
+        return statsClient.getStats(
+                LocalDateTime.of(2000, 1, 1, 0, 0).toString(),
+                LocalDateTime.of(2024, 12, 31, 0, 0).toString(),
+                eventPaths,
+                true
+        ).getBody();
     }
 }

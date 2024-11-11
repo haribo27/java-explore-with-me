@@ -66,15 +66,16 @@ public class EventServiceImpl implements EventService {
         event.setInitiator(initiator);
         log.info("Set created date {}", LocalDateTime.now());
         event.setCreatedOn(LocalDateTime.now().withNano(0));
+        log.info("Set event status: {} to event", PENDING);
         event.setState(PENDING);
         event = eventRepository.save(event);
-        log.info("Saving event: {}, id: {}", event, event.getId());
+        log.info("Saved event: {}, id: {}", event, event.getId());
         return eventMapper.mapToEventFullDto(event, new HashMap<>());
     }
 
     @Override
     public List<EventShortDto> findEventsByParams(long userId, Integer from, Integer size) {
-        log.info("Find events by params: userid: {}, from: {}, size: {}", userId, from, size);
+        log.info("Finding events by params: userid: {}, from: {}, size: {}", userId, from, size);
         List<Event> findEvents = eventRepository.findEvents(userId, from, size);
         Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
         return findEvents.stream()
@@ -86,6 +87,7 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> findEventsByParams(List<Long> users, List<EventState> states,
                                                  List<Long> categories, LocalDateTime rangeStart,
                                                  LocalDateTime rangeEnd, Integer from, Integer size) {
+        log.info("Finding events with params...");
         QEvent event = QEvent.event;
         JPAQuery<Event> query = new JPAQuery<>(entityManager);
         query.from(event);
@@ -119,7 +121,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getFullInfoAboutUserEvent(long userId, long eventId) {
-        log.info("Get full info about user's event");
+        log.info("Getting full info about user's {} event {}", userId, eventId);
         Event event = eventRepository.findEventByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
@@ -132,26 +134,8 @@ public class EventServiceImpl implements EventService {
         log.info("Updating event id: {}, updated fields: {}", eventId, requestEventDto);
         Event event = eventRepository.findEventByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
-        if (requestEventDto.getEventDate() != null &&
-                requestEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
-            throw new IncorrectInputArguments("Дата начала события должна быть не " +
-                    "ранее чем за два часа до даты публикации.");
-        }
-
-        if (event.getState().equals(PUBLISHED)) {
-            log.info("Event is published, cant update this event");
-            throw new ConditionsAreNotMet("Only pending or canceled events can be changed");
-        } else if (requestEventDto.getStateAction() != null) {
-            switch (requestEventDto.getStateAction()) {
-                case "SEND_TO_REVIEW":
-                    event.setState(PENDING);
-                    break;
-                case "CANCEL_REVIEW":
-                    event.setState(CANCELED);
-                    break;
-            }
-            eventMapper.updateEvent(requestEventDto, event);
-        }
+        checkThatEventDateAfterTwoHours(requestEventDto);
+        checkEventStatusAndChangeIt(requestEventDto, event);
         event = eventRepository.save(event);
         log.info("Event updated and saved success {}", event);
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
@@ -174,6 +158,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventFullDto adminUpdateEvent(UpdateEventAdminRequest updateRequest, long eventId) {
+        log.info("Admin updating event: {} , updated body: {}", eventId, updateRequest);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
         if (updateRequest.getEventDate() != null && event.getPublishedOn() != null) {
@@ -189,8 +174,10 @@ public class EventServiceImpl implements EventService {
     }
 
     private void checkEventDateIsValid(UpdateEventAdminRequest updateRequest, Event event) {
+        log.info("Check that is event date is correct: {}", updateRequest.getEventDate());
         if (updateRequest.getEventDate() != null &&
                 updateRequest.getEventDate().isBefore(event.getPublishedOn().plusHours(1))) {
+            log.warn("Event date is incorrect");
             throw new IncorrectInputArguments("Дата начала события должна быть не ранее чем за час до даты публикации.");
         }
     }
@@ -201,17 +188,21 @@ public class EventServiceImpl implements EventService {
                 if (event.getState().equals(PENDING)) {
                     event.setState(PUBLISHED);
                     event.setPublishedOn(LocalDateTime.now());
+                    log.info("Admin change event status from: {}, to: {}", PENDING, PUBLISHED);
                 } else {
+                    log.warn("Event can't published cause status is: {} or {}", PUBLISHED, CANCELED);
                     throw new ConditionsAreNotMet("Cannot publish the event because" +
                             " it's not in the right state: PUBLISHED or CANCELED");
                 }
                 break;
             case "REJECT_EVENT":
                 if (event.getState().equals(PUBLISHED)) {
+                    log.warn("Event with status: {} can't be REJECTED", PUBLISHED);
                     throw new ConditionsAreNotMet("You cant reject PUBLISHED event");
                 }
                 if (event.getState().equals(PENDING)) {
                     event.setState(CANCELED);
+                    log.info("Admin change event status to: {}", CANCELED);
                 }
                 break;
         }
@@ -269,13 +260,6 @@ public class EventServiceImpl implements EventService {
         if (onlyAvailable != null && onlyAvailable) {
             query.where(event.confirmedRequests.lt(event.participantLimit));
         }
-        // todo доделать сортировку
-        /*if ("EVENT_DATE".equalsIgnoreCase(sort)) {
-            query.orderBy(event.eventDate.asc());
-        } else if ("VIEWS".equalsIgnoreCase(sort)) {
-            query.orderBy(event.views.asc());
-        }*/
-
         if (from != null) {
             query.offset(from);
         }
@@ -309,5 +293,30 @@ public class EventServiceImpl implements EventService {
                         hit -> Long.parseLong(hit.getUri().split("/events/")[1]), // Извлекаем eventId из URI
                         HitStatsDto::getHits
                 ));
+    }
+
+    private void checkEventStatusAndChangeIt(UpdateRequestEventDto requestEventDto, Event event) {
+        if (event.getState().equals(PUBLISHED)) {
+            log.info("Event is published, cant update this event");
+            throw new ConditionsAreNotMet("Only pending or canceled events can be changed");
+        } else if (requestEventDto.getStateAction() != null) {
+            switch (requestEventDto.getStateAction()) {
+                case "SEND_TO_REVIEW":
+                    event.setState(PENDING);
+                    break;
+                case "CANCEL_REVIEW":
+                    event.setState(CANCELED);
+                    break;
+            }
+            eventMapper.updateEvent(requestEventDto, event);
+        }
+    }
+
+    private void checkThatEventDateAfterTwoHours(UpdateRequestEventDto requestEventDto) {
+        if (requestEventDto.getEventDate() != null &&
+                requestEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
+            throw new IncorrectInputArguments("Дата начала события должна быть не " +
+                    "ранее чем за два часа до даты публикации.");
+        }
     }
 }

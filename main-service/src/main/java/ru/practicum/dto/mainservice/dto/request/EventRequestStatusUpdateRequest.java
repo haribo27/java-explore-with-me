@@ -8,8 +8,6 @@ import java.util.List;
 @Data
 public class EventRequestStatusUpdateRequest {
 
-    // @NotNull
     private List<Long> requestIds;
-    // @NotNull
     private RequestState status;
 }

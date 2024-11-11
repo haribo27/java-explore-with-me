@@ -10,7 +10,6 @@ import ru.practicum.dto.mainservice.model.Location;
 import java.time.LocalDateTime;
 
 @Data
-//@StartAfterTwoHours(dateMethod = "getEventDate")
 public class UpdateEventAdminRequest {
 
     @Size(min = 20, max = 2000,

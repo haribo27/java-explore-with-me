@@ -17,7 +17,6 @@ public class CompilationsController {
     public ResponseEntity<?> findCompilations(@RequestParam(value = "pinned", required = false) Boolean pinned,
                                               @RequestParam(value = "from", defaultValue = "0") Integer from,
                                               @RequestParam(value = "size", defaultValue = "10") Integer size) {
-
         return new ResponseEntity<>(compilationService.findByParams(pinned, from, size),
                 HttpStatus.OK);
     }

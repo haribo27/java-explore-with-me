@@ -28,26 +28,16 @@ public class StatsClient {
 
     public ResponseEntity<List<HitStatsDto>> getStats(String start, String end, List<String> uris, Boolean unique) {
         String hitStatUrl = baseUrl + "/stats";
-      /*  try {
-            start = EncodeDate.encodeDate(start);
-            end = EncodeDate.encodeDate(end);
-        } catch (UnsupportedEncodingException e) {
-            System.err.println("Unsupported encoding: " + e.getMessage());
-        }*/
-
         UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(hitStatUrl)
                 .queryParam("start", start)
                 .queryParam("end", end);
-
         if (uris != null && !uris.isEmpty()) {
             builder.queryParam("uris", uris);
         }
         if (unique != null) {
             builder.queryParam("unique", unique);
         }
-
         String url = builder.toUriString();
-
         return restTemplate.exchange(
                 url,
                 HttpMethod.GET,
