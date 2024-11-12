@@ -17,10 +17,7 @@ import ru.practicum.dto.mainservice.repository.RequestRepository;
 import ru.practicum.dto.mainservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.practicum.dto.mainservice.model.EventState.PUBLISHED;
@@ -54,7 +51,6 @@ public class RequestServiceImpl implements RequestService {
         setRequestFields(request, event, requester);
         request = requestRepository.save(request);
         log.info("Saved request: {}", request);
-        updateEventConfirmedRequests(eventId, event);
         return requestMapper.mapToDto(request);
     }
 
@@ -77,7 +73,6 @@ public class RequestServiceImpl implements RequestService {
         log.info("Set request state Canceled to request");
         request = requestRepository.save(request);
         log.info("Request updated: {}", request);
-        eventRepository.updateConfirmedRequests(request.getEvent().getId());
         log.info("Updating confirmed_requests to event");
         return requestMapper.mapToDto(request);
     }
@@ -103,30 +98,26 @@ public class RequestServiceImpl implements RequestService {
             return;
         }
         checkEventParticipantLimit(event);
+        List<Request> requestsToConfirm;
+        List<Request> requestsTorReject = new ArrayList<>();
         int availableRequestsLimit = countAvailableRequestsLimit(event);
         log.info("Available request limit = {}", availableRequestsLimit);
-        List<Request> requestsToConfirm = requests.stream()
+        checkRequestsToUpdateStatus(requests);
+        requestsToConfirm = requests.stream()
                 .filter(request -> dto.getRequestIds().contains(request.getId()))
                 .limit(availableRequestsLimit)
+                .peek(request -> request.setStatus(dto.getStatus()))
                 .toList();
         log.info("Requests to confirm {}", requestsToConfirm);
-        List<Request> requestsTorReject = requests.stream()
-                .filter(request -> !requestsToConfirm.contains(request))
-                .toList();
-        log.info("Requests to reject: {}", requestsTorReject);
-        checkRequestsToUpdateStatus(requestsToConfirm);
-
-        requestsToConfirm.forEach(request -> {
-            request.setStatus(dto.getStatus());
-            requestRepository.save(request);
-            eventRepository.updateConfirmedRequests(eventId);
-        });
-
-        requestsTorReject.forEach(request -> {
-            request.setStatus(REJECTED);
-            requestRepository.save(request);
-            eventRepository.updateConfirmedRequests(eventId);
-        });
+        if (dto.getStatus().equals(CONFIRMED)) {
+            requestsTorReject = requests.stream()
+                    .filter(request -> !requestsToConfirm.contains(request))
+                    .peek(request -> request.setStatus(REJECTED))
+                    .toList();
+            log.info("Requests to reject: {}", requestsTorReject);
+        }
+        requestRepository.saveAll(requestsToConfirm);
+        requestRepository.saveAll(requestsTorReject);
         log.info("Updating success");
     }
 
@@ -189,9 +180,7 @@ public class RequestServiceImpl implements RequestService {
         }
         if (event.getParticipantLimit() > 0) {
             log.debug("Check partitions limit of event");
-            long requestsCount = requestRepository.getPartitionsRequestToEvent(eventId);
-            log.debug("Requests count: {}", requestsCount);
-            if (requestsCount == event.getParticipantLimit()) {
+            if (event.getConfirmedRequests() == event.getParticipantLimit()) {
                 log.warn("Requests count = partitions limit, cant create request");
                 throw new ConditionsAreNotMet("The limit of participation requests has been reached.");
             }
@@ -210,13 +199,6 @@ public class RequestServiceImpl implements RequestService {
                 request.getStatus().equals(CANCELED))) {
             log.warn("Requests with status {} and {} can't updated", CANCELED, CONFIRMED);
             throw new ConditionsAreNotMet("CONFIRMED or CANCELED request can't updated");
-        }
-    }
-
-    private void updateEventConfirmedRequests(long eventId, Event event) {
-        if (!event.getRequestModeration() || event.getParticipantLimit() == 0) {
-            log.debug("Update confirmed event requests");
-            eventRepository.updateConfirmedRequests(eventId);
         }
     }
 }

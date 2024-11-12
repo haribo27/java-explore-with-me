@@ -6,6 +6,8 @@ import jakarta.persistence.PersistenceContext;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.HitStatsDto;
@@ -24,9 +26,7 @@ import ru.practicum.dto.mainservice.repository.UserRepository;
 import ru.practicum.dto.mainservice.viewsApiClient.ApiClient;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static ru.practicum.dto.mainservice.model.EventState.*;
@@ -76,16 +76,18 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventShortDto> findEventsByParams(long userId, Integer from, Integer size) {
         log.info("Finding events by params: userid: {}, from: {}, size: {}", userId, from, size);
-        List<Event> findEvents = eventRepository.findEvents(userId, from, size);
-        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
+        Pageable pageable = PageRequest.of(from, size);
+        List<Event> findEvents = eventRepository.findAllByInitiator_Id(userId, pageable);
+        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList(),
+                findEarliestEvent(findEvents.stream().filter(event -> event.getState().equals(PUBLISHED)).toList()));
         return findEvents.stream()
                 .map(event -> eventMapper.mapToShortEventDto(event, viewsMap))
                 .toList();
     }
 
     @Override
-    public List<EventFullDto> findEventsByParams(List<Long> users, List<EventState> states,
-                                                 List<Long> categories, LocalDateTime rangeStart,
+    public List<EventFullDto> findEventsByParams(Set<Long> users, Set<EventState> states,
+                                                 Set<Long> categories, LocalDateTime rangeStart,
                                                  LocalDateTime rangeEnd, Integer from, Integer size) {
         log.info("Finding events with params...");
         QEvent event = QEvent.event;
@@ -113,7 +115,8 @@ public class EventServiceImpl implements EventService {
             query.limit(size);
         }
         List<Event> findEvents = query.fetch();
-        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
+        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList(),
+                findEarliestEvent(findEvents.stream().filter(event1 -> event1.getState().equals(PUBLISHED)).toList()));
         return findEvents
                 .stream().map(event1 -> eventMapper.mapToEventFullDto(event1, viewsMap))
                 .toList();
@@ -124,13 +127,13 @@ public class EventServiceImpl implements EventService {
         log.info("Getting full info about user's {} event {}", userId, eventId);
         Event event = eventRepository.findEventByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
-        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
         return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
     @Override
     @Transactional
-    public EventFullDto updateEvent(UpdateRequestEventDto requestEventDto, long eventId, long userId) {
+    public EventFullDto updateEvent(UpdateEventUserRequest requestEventDto, long eventId, long userId) {
         log.info("Updating event id: {}, updated fields: {}", eventId, requestEventDto);
         Event event = eventRepository.findEventByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
@@ -138,7 +141,7 @@ public class EventServiceImpl implements EventService {
         checkEventStatusAndChangeIt(requestEventDto, event);
         event = eventRepository.save(event);
         log.info("Event updated and saved success {}", event);
-        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
         return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
@@ -169,7 +172,7 @@ public class EventServiceImpl implements EventService {
             changeStatusFromRequest(updateRequest, event);
         }
         event = eventRepository.save(event);
-        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId));
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
         return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
@@ -184,7 +187,7 @@ public class EventServiceImpl implements EventService {
 
     private void changeStatusFromRequest(UpdateEventAdminRequest updateRequest, Event event) {
         switch (updateRequest.getStateAction()) {
-            case "PUBLISH_EVENT":
+            case PUBLISH_EVENT:
                 if (event.getState().equals(PENDING)) {
                     event.setState(PUBLISHED);
                     event.setPublishedOn(LocalDateTime.now());
@@ -195,7 +198,7 @@ public class EventServiceImpl implements EventService {
                             " it's not in the right state: PUBLISHED or CANCELED");
                 }
                 break;
-            case "REJECT_EVENT":
+            case REJECT_EVENT:
                 if (event.getState().equals(PUBLISHED)) {
                     log.warn("Event with status: {} can't be REJECTED", PUBLISHED);
                     throw new ConditionsAreNotMet("You cant reject PUBLISHED event");
@@ -215,15 +218,15 @@ public class EventServiceImpl implements EventService {
         EventRequestStatusUpdateResult dto = new EventRequestStatusUpdateResult();
         dto.setConfirmedRequests(test.stream()
                 .filter(request -> request.getStatus().equals(RequestState.CONFIRMED))
-                .toList());
+                .collect(Collectors.toSet()));
         dto.setRejectedRequests(test.stream()
                 .filter(request -> request.getStatus().equals(RequestState.REJECTED))
-                .toList());
+                .collect(Collectors.toSet()));
         return dto;
     }
 
     @Override
-    public List<EventShortDto> findEventsByParamsAndFilter(String text, List<Long> categories, Boolean paid,
+    public List<EventShortDto> findEventsByParamsAndFilter(String text, Set<Long> categories, Boolean paid,
                                                            LocalDateTime rangeStart, LocalDateTime rangeEnd,
                                                            Boolean onlyAvailable, String sort, Integer from,
                                                            Integer size, HttpServletRequest request) {
@@ -269,7 +272,8 @@ public class EventServiceImpl implements EventService {
 
         List<Event> findEvents = query.fetch();
         apiClient.sendHitRequestToApi(request);
-        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList());
+        Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList(),
+                findEarliestEvent(findEvents));
         return findEvents.stream().map(event1 -> eventMapper.mapToShortEventDto(event1, viewsMap)).toList();
     }
 
@@ -282,29 +286,32 @@ public class EventServiceImpl implements EventService {
         } else {
             throw new EventStatusInvalid("Event must be PUBLISHED");
         }
-        Map<Long, Long> viewsMap = getEventViewsMap(List.of(id));
+        Map<Long, Long> viewsMap = getEventViewsMap(List.of(id), findEarliestEvent(List.of(event)));
         return eventMapper.mapToEventFullDto(event, viewsMap);
     }
 
-    public Map<Long, Long> getEventViewsMap(List<Long> eventIds) {
-        List<HitStatsDto> statsList = apiClient.getEventViews(eventIds);
+    private Map<Long, Long> getEventViewsMap(List<Long> eventIds, LocalDateTime earliestEventDate) {
+        List<HitStatsDto> statsList = apiClient.getEventViews(eventIds, earliestEventDate);
+        if (statsList == null) {
+            return Collections.emptyMap();
+        }
         return statsList.stream()
                 .collect(Collectors.toMap(
-                        hit -> Long.parseLong(hit.getUri().split("/events/")[1]), // Извлекаем eventId из URI
+                        hit -> Long.parseLong(hit.getUri().split("/events/")[1]),
                         HitStatsDto::getHits
                 ));
     }
 
-    private void checkEventStatusAndChangeIt(UpdateRequestEventDto requestEventDto, Event event) {
+    private void checkEventStatusAndChangeIt(UpdateEventUserRequest requestEventDto, Event event) {
         if (event.getState().equals(PUBLISHED)) {
             log.info("Event is published, cant update this event");
             throw new ConditionsAreNotMet("Only pending or canceled events can be changed");
         } else if (requestEventDto.getStateAction() != null) {
             switch (requestEventDto.getStateAction()) {
-                case "SEND_TO_REVIEW":
+                case SEND_TO_REVIEW:
                     event.setState(PENDING);
                     break;
-                case "CANCEL_REVIEW":
+                case CANCEL_REVIEW:
                     event.setState(CANCELED);
                     break;
             }
@@ -312,11 +319,22 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private void checkThatEventDateAfterTwoHours(UpdateRequestEventDto requestEventDto) {
+    private void checkThatEventDateAfterTwoHours(UpdateEventUserRequest requestEventDto) {
         if (requestEventDto.getEventDate() != null &&
                 requestEventDto.getEventDate().isBefore(LocalDateTime.now().plusHours(2))) {
             throw new IncorrectInputArguments("Дата начала события должна быть не " +
                     "ранее чем за два часа до даты публикации.");
         }
+    }
+
+    private LocalDateTime findEarliestEvent(List<Event> events) {
+        if (events == null) {
+            return null;
+        }
+        if (events.size() == 1) {
+            return events.getFirst().getPublishedOn();
+        }
+        Optional<Event> earliestEvent = events.stream().min(Comparator.comparing(Event::getPublishedOn));
+        return earliestEvent.map(Event::getPublishedOn).orElse(null);
     }
 }

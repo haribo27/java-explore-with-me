@@ -19,7 +19,7 @@ public interface EventMapper {
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "state", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEvent(UpdateRequestEventDto requestDto, @MappingTarget Event event);
+    void updateEvent(UpdateEventUserRequest requestDto, @MappingTarget Event event);
 
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "state", ignore = true)

@@ -12,12 +12,6 @@ public interface RequestRepository extends JpaRepository<Request, Long> {
 
     Optional<Request> findByRequesterIdAndEvent_Id(long userId, long eventId);
 
-    @Query("SELECT COUNT(*) " +
-            "FROM Request as r " +
-            "WHERE r.event.id = ?1 " +
-            "AND r.status = 'CONFIRMED' ")
-    Long getPartitionsRequestToEvent(long eventId);
-
     @Query("SELECT r " +
             "FROM Request as r " +
             "WHERE r.requester.id = ?1 ")

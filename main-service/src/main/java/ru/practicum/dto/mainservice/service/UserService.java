@@ -4,13 +4,13 @@ import ru.practicum.dto.mainservice.dto.user.UserDto;
 import ru.practicum.dto.mainservice.dto.user.UserRequestDto;
 
 import java.util.List;
+import java.util.Set;
 
 public interface UserService {
 
     UserDto saveUser(UserRequestDto userRequestDto);
 
-
-    List<UserDto> findUserByParams(List<Long> ids, Integer from, Integer size);
+    List<UserDto> findUserByParams(Set<Long> ids, Integer from, Integer size);
 
     void deleteUser(long userId);
 }

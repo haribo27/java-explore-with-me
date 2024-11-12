@@ -14,9 +14,9 @@ import ru.practicum.dto.mainservice.model.Event;
 import ru.practicum.dto.mainservice.repository.CompilationRepository;
 import ru.practicum.dto.mainservice.repository.EventRepository;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -35,11 +35,11 @@ public class CompilationServiceImpl implements CompilationService {
         Compilation compilation = compilationMapper.mapToCompilation(compilationDto);
         log.info("Mapping event ids: {} to events", compilationDto.getEvents());
         if (compilationDto.getEvents() != null && !compilationDto.getEvents().isEmpty()) {
-            List<Event> events = collectEventsFromIds(compilationDto.getEvents());
+            Set<Event> events = collectEventsFromIds(compilationDto.getEvents());
             log.info("Set events to compilation {}", events);
             compilation.setEvents(events);
         } else {
-            compilation.setEvents(new ArrayList<>());
+            compilation.setEvents(new HashSet<>());
         }
         compilation = compilationRepository.save(compilation);
         log.info("Compilation saved: {}", compilation);
@@ -90,12 +90,9 @@ public class CompilationServiceImpl implements CompilationService {
                 .toList();
     }
 
-    private List<Event> collectEventsFromIds(List<Long> ids) {
+    private Set<Event> collectEventsFromIds(Set<Long> ids) {
         log.info("Find events from input ids: {} to compilation", ids);
-        return ids.stream()
-                .map(id -> eventRepository.findById(id)
-                        .orElseThrow(() -> new EntityNotFoundException("Event with id=" + id + " not found")))
-                .collect(Collectors.toList());
+        return eventRepository.findEventByIdIn(ids);
 
     }
 }

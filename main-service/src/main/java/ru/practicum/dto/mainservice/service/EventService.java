@@ -8,6 +8,7 @@ import ru.practicum.dto.mainservice.model.EventState;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 
 public interface EventService {
 
@@ -15,14 +16,14 @@ public interface EventService {
 
     List<EventShortDto> findEventsByParams(long userId, Integer from, Integer size);
 
-    List<EventFullDto> findEventsByParams(List<Long> users, List<EventState> states,
-                                          List<Long> categories, LocalDateTime rangeStart,
+    List<EventFullDto> findEventsByParams(Set<Long> users, Set<EventState> states,
+                                          Set<Long> categories, LocalDateTime rangeStart,
                                           LocalDateTime rangeEnd, Integer from,
                                           Integer size);
 
     EventFullDto getFullInfoAboutUserEvent(long userId, long eventId);
 
-    EventFullDto updateEvent(UpdateRequestEventDto requestEventDto, long eventId, long userId);
+    EventFullDto updateEvent(UpdateEventUserRequest requestEventDto, long eventId, long userId);
 
     List<ParticipationRequestDto> getOwnersEventRequests(long userId, long eventId);
 
@@ -33,7 +34,7 @@ public interface EventService {
     EventRequestStatusUpdateResult getUpdatedRequestStatus(List<Long> requestIds,
                                                            long userId, long evenId);
 
-    List<EventShortDto> findEventsByParamsAndFilter(String text, List<Long> categories, Boolean paid, LocalDateTime rangeStart,
+    List<EventShortDto> findEventsByParamsAndFilter(String text, Set<Long> categories, Boolean paid, LocalDateTime rangeStart,
                                                     LocalDateTime rangeEnd, Boolean onlyAvailable, String sort, Integer from,
                                                     Integer size,HttpServletRequest request);
 

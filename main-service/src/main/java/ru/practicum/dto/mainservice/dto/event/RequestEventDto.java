@@ -6,7 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.dto.mainservice.model.Location;
 import ru.practicum.dto.mainservice.util.StartAfterTwoHours;
 
 import java.time.LocalDateTime;
@@ -34,7 +33,7 @@ public class RequestEventDto {
     @Future(message = "Дата и время события должны быть в будущем")
     private LocalDateTime eventDate;
     @NotNull(message = "Место встречи не может быть пустым")
-    private Location location;
+    private LocationDto location;
     private boolean paid;
     @PositiveOrZero(message = "Ограничения по участникам должно быть 0 или больше")
     private int participantLimit;

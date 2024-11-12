@@ -3,33 +3,35 @@ package ru.practicum.dto.mainservice.controllers.privates;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.dto.mainservice.dto.request.ParticipationRequestDto;
 import ru.practicum.dto.mainservice.service.RequestService;
 
-@RestController
+import java.util.List;
+
+@Controller
 @RequiredArgsConstructor
 public class PrivateRequestController {
 
     private final RequestService requestService;
 
     @PostMapping("/users/{userId}/requests")
-    public ResponseEntity<?> addRequestToEvent(@PathVariable long userId,
-                                               @RequestParam("eventId") long eventId) {
+    public ResponseEntity<ParticipationRequestDto> addRequestToEvent(@PathVariable long userId,
+                                                                     @RequestParam("eventId") long eventId) {
         return new ResponseEntity<>(requestService.addRequestToEvent(userId, eventId),
                 HttpStatus.CREATED);
     }
 
     @GetMapping("/users/{userId}/requests")
-    public ResponseEntity<?> getUsersRequests(@PathVariable long userId) {
-        return new ResponseEntity<>(requestService.findUsersRequests(userId),
-                HttpStatus.OK);
+    public ResponseEntity<List<ParticipationRequestDto>> getUsersRequests(@PathVariable long userId) {
+        return ResponseEntity.ok(requestService.findUsersRequests(userId));
     }
 
     @PatchMapping("/users/{userId}/requests/{requestId}/cancel")
-    public ResponseEntity<?> cancelRequest(@PathVariable long userId,
-                                           @PathVariable long requestId) {
-        return new ResponseEntity<>(requestService.cancelRequest(userId,requestId),
-                HttpStatus.OK);
+    public ResponseEntity<ParticipationRequestDto> cancelRequest(@PathVariable long userId,
+                                                                 @PathVariable long requestId) {
+        return ResponseEntity.ok(requestService.cancelRequest(userId, requestId));
     }
 
 }

@@ -23,25 +23,29 @@ public class ApiClient {
     @Value("${spring.application.name}")
     private String appName;
 
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
     public void sendHitRequestToApi(HttpServletRequest request) {
         log.info("Create request hit to stats service");
         HitRequestDto requestDto = new HitRequestDto();
         requestDto.setApp(appName);
         requestDto.setIp(request.getRemoteAddr());
         requestDto.setUri(request.getRequestURI());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         requestDto.setTimestamp(LocalDateTime.parse(LocalDateTime.now().format(formatter), formatter));
         log.info("Send request to api {}", requestDto);
         statsClient.recordRequest(requestDto);
     }
 
-    public List<HitStatsDto> getEventViews(List<Long> ids) {
+    public List<HitStatsDto> getEventViews(List<Long> ids, LocalDateTime earliestEventDate) {
         List<String> eventPaths = ids.stream()
                 .map(id -> "/events/" + id)
                 .toList();
+        if (earliestEventDate == null) {
+            return null;
+        }
         return statsClient.getStats(
-                LocalDateTime.of(2000, 1, 1, 0, 0).toString(),
-                LocalDateTime.of(2024, 12, 31, 0, 0).toString(),
+                earliestEventDate.format(formatter),
+                LocalDateTime.now().format(formatter),
                 eventPaths,
                 true
         ).getBody();

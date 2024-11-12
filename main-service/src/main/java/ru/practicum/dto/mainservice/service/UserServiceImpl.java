@@ -2,6 +2,8 @@ package ru.practicum.dto.mainservice.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.dto.mainservice.dto.user.UserDto;
@@ -14,6 +16,7 @@ import ru.practicum.dto.mainservice.repository.UserRepository;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -39,15 +42,16 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public List<UserDto> findUserByParams(List<Long> ids,
+    public List<UserDto> findUserByParams(Set<Long> ids,
                                           Integer from, Integer size) {
         log.info("Finding users by params: ids: {}, from: {}, size: {}", ids, from, size);
         List<User> queryByParamsResult;
+        Pageable pageable = PageRequest.of(from, size);
         if (ids != null && !ids.isEmpty()) {
             log.info("If ids is null, get users by other params");
-            queryByParamsResult = userRepository.findUserWithIds(ids, from, size);
+            queryByParamsResult = userRepository.findUserByIdIn(ids, pageable);
         } else {
-            queryByParamsResult = userRepository.findUserBy(from, size);
+            queryByParamsResult = userRepository.findAll(pageable).toList();
         }
         return queryByParamsResult.stream()
                 .map(userMapper::mapToUserDto)

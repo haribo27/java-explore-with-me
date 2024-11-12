@@ -3,6 +3,7 @@ package ru.practicum.dto.mainservice.model;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Formula;
 
 import java.time.LocalDateTime;
 
@@ -17,7 +18,7 @@ public class Event {
     private long id;
     @Column(nullable = false, length = 2000)
     private String annotation;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "category_id")
     private Category category;
     @Column(nullable = false, length = 7000)
@@ -36,13 +37,13 @@ public class Event {
     private Boolean requestModeration;
     @Column(nullable = false, length = 120)
     private String title;
-    @Column(name = "confirmed_requests")
-    private int confirmedRequests;
+    @Formula("(SELECT COUNT(r.id) FROM requests r WHERE r.event_id = id AND r.status = 'CONFIRMED')")
+    private int confirmedRequests;  // Это поле будет хранить количество подтвержденных заявок
     @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn;
     @Column(name = "published_on")
     private LocalDateTime publishedOn;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "user_id")
     private User initiator;
 }

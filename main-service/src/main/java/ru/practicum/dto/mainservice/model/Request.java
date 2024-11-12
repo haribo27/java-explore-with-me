@@ -17,7 +17,7 @@ public class Request {
     private long id;
     @Column(nullable = false)
     private LocalDateTime created;
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "event_id")
     private Event event;
     @OneToOne
