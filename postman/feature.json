@@ -13,36 +13,7 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"const main = async () => {\r",
-							"    const api = new API(pm);\r",
-							"    const rnd = new RandomUtils();\r",
-							"\r",
-							"    try {\r",
-							"        const user = await api.addUser(rnd.getUser());\r",
-							"        const user1 = await api.addUser(rnd.getUser())\r",
-							"         let event = await api.addEvent(user.id, eventBody);\r",
-							"        event = await api.publishEvent(event.id);\r",
-							"        comment = await api.addComment(user.id, rnd.getComment())\r",
-							"        pm.collectionVariables.set(\"uid\", user.id)\r",
-							"    } catch(err) {\r",
-							"        console.error(\"Ошибка при подготовке тестовых данных.\", err);\r",
-							"    }\r",
-							"};\r",
-							"\r",
-							"const interval = setInterval(() => {}, 1000);\r",
-							"\r",
-							"setTimeout(async () => \r",
-							"    {\r",
-							"        try {\r",
-							"            await main();\r",
-							"        } catch (e) {\r",
-							"            console.error(e);\r",
-							"        } finally {\r",
-							"            clearInterval(interval);\r",
-							"        }\r",
-							"    },  \r",
-							"    100 \r",
-							");"
+							""
 						],
 						"type": "text/javascript",
 						"packages": {}
@@ -79,7 +50,27 @@
 			],
 			"request": {
 				"method": "POST",
-				"header": [],
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\": \"Отличное событие\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
 				"url": {
 					"raw": "{{baseUrl}}/users/:userId/events/:eventId/comments",
 					"host": [
@@ -218,7 +209,25 @@
 						}
 					}
 				},
-				"url": "{{baseUrl}}/users/-11/events/7/comments"
+				"url": {
+					"raw": "{{baseUrl}}/users/:userId/events/7/comments",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						":userId",
+						"events",
+						"7",
+						"comments"
+					],
+					"variable": [
+						{
+							"key": "userId",
+							"value": "sdfddsf"
+						}
+					]
+				}
 			},
 			"response": []
 		},
@@ -288,6 +297,31 @@
 						"type": "text/javascript",
 						"packages": {}
 					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Получаем текущее значение переменной 'commentId'\r",
+							"let commentId = pm.collectionVariables.get(\"commentId\");\r",
+							"\r",
+							"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
+							"if (commentId !== undefined) {\r",
+							"    commentId = parseInt(commentId); // Преобразуем в число\r",
+							"    commentId++; // Увеличиваем на 1\r",
+							"} else {\r",
+							"    commentId = 1; // Начинаем с 1, если переменной нет\r",
+							"}\r",
+							"\r",
+							"// Сохраняем обновленное значение переменной в коллекции\r",
+							"pm.collectionVariables.set(\"commentId\", commentId);\r",
+							"\r",
+							"// Логирование для отладки\r",
+							"console.log(\"Новое значение commentId: \" + commentId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
 				}
 			],
 			"request": {
@@ -343,12 +377,54 @@
 						"type": "text/javascript",
 						"packages": {}
 					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Получаем текущее значение переменной 'commentId'\r",
+							"let commentId = pm.collectionVariables.get(\"commentId\");\r",
+							"\r",
+							"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
+							"if (commentId !== undefined) {\r",
+							"    commentId = parseInt(commentId); // Преобразуем в число\r",
+							"    commentId++; // Увеличиваем на 1\r",
+							"} else {\r",
+							"    commentId = 1; // Начинаем с 1, если переменной нет\r",
+							"}\r",
+							"\r",
+							"// Сохраняем обновленное значение переменной в коллекции\r",
+							"pm.collectionVariables.set(\"commentId\", commentId);\r",
+							"\r",
+							"// Логирование для отладки\r",
+							"console.log(\"Новое значение commentId: \" + commentId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
 				}
 			],
 			"request": {
 				"method": "DELETE",
 				"header": [],
-				"url": "{{baseUrl}}/admin/events/comments/{{commentId}}"
+				"url": {
+					"raw": "{{baseUrl}}/admin/events/comments/:commentId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"events",
+						"comments",
+						":commentId"
+					],
+					"variable": [
+						{
+							"key": "commentId",
+							"value": "{{commentId}}"
+						}
+					]
+				}
 			},
 			"response": []
 		},
@@ -455,12 +531,55 @@
 						"type": "text/javascript",
 						"packages": {}
 					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Получаем текущее значение переменной 'commentId'\r",
+							"let commentId = pm.collectionVariables.get(\"commentId\");\r",
+							"\r",
+							"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
+							"if (commentId !== undefined) {\r",
+							"    commentId = parseInt(commentId); // Преобразуем в число\r",
+							"    commentId++; // Увеличиваем на 1\r",
+							"} else {\r",
+							"    commentId = 1; // Начинаем с 1, если переменной нет\r",
+							"}\r",
+							"\r",
+							"// Сохраняем обновленное значение переменной в коллекции\r",
+							"pm.collectionVariables.set(\"commentId\", commentId);\r",
+							"\r",
+							"// Логирование для отладки\r",
+							"console.log(\"Новое значение commentId: \" + commentId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
 				}
 			],
 			"request": {
 				"method": "DELETE",
 				"header": [],
-				"url": "{{baseUrl}}/users/11/events/comments/5"
+				"url": {
+					"raw": "{{baseUrl}}/users/11/events/comments/:commentId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						"11",
+						"events",
+						"comments",
+						":commentId"
+					],
+					"variable": [
+						{
+							"key": "commentId",
+							"value": "{{commentId}}"
+						}
+					]
+				}
 			},
 			"response": []
 		}
@@ -532,7 +651,7 @@
 		},
 		{
 			"key": "baseUrl",
-			"value": "localhost:8080",
+			"value": "http://localhost:8080",
 			"type": "string"
 		},
 		{

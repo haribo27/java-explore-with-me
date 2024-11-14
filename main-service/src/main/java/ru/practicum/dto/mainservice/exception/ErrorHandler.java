@@ -42,7 +42,7 @@ public class ErrorHandler {
 
     @ExceptionHandler
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
-        log.warn("Logging exception {}, status {}", e.getMessage(), 500);
+        log.warn("Logging exception {}, status {}", e.getMessage() + e.getCause(), 500);
         return new ResponseEntity<>(new ErrorResponse("500", e.getMessage(), "Error"),
                 HttpStatus.INTERNAL_SERVER_ERROR);
     }
