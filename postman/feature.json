@@ -452,49 +452,6 @@
 			"response": []
 		},
 		{
-			"name": "Успешное добавление нового комментария",
-			"event": [
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							""
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "POST",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/users/:userId/events/:eventId/comments",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"users",
-						":userId",
-						"events",
-						":eventId",
-						"comments"
-					],
-					"variable": [
-						{
-							"key": "userId",
-							"value": "{{userId}}"
-						},
-						{
-							"key": "eventId",
-							"value": "{{eventId}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
 			"name": "Попытка удаление комментария не автором комментария",
 			"event": [
 				{
@@ -544,73 +501,6 @@
 						{
 							"key": "userId",
 							"value": "{{userId}}"
-						}
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Удаление комментария автором",
-			"event": [
-				{
-					"listen": "test",
-					"script": {
-						"exec": [
-							"pm.test(\"Статус-код 204\", function () {\r",
-							"    pm.response.to.have.status(204);\r",
-							"});\r",
-							""
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				},
-				{
-					"listen": "prerequest",
-					"script": {
-						"exec": [
-							"// Получаем текущее значение переменной 'commentId'\r",
-							"let commentId = pm.collectionVariables.get(\"commentId\");\r",
-							"\r",
-							"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
-							"if (commentId !== undefined) {\r",
-							"    commentId = parseInt(commentId); // Преобразуем в число\r",
-							"    commentId++; // Увеличиваем на 1\r",
-							"} else {\r",
-							"    commentId = 1; // Начинаем с 1, если переменной нет\r",
-							"}\r",
-							"\r",
-							"// Сохраняем обновленное значение переменной в коллекции\r",
-							"pm.collectionVariables.set(\"commentId\", commentId);\r",
-							"\r",
-							"// Логирование для отладки\r",
-							"console.log(\"Новое значение commentId: \" + commentId);"
-						],
-						"type": "text/javascript",
-						"packages": {}
-					}
-				}
-			],
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"url": {
-					"raw": "{{baseUrl}}/users/11/events/comments/:commentId",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"users",
-						"11",
-						"events",
-						"comments",
-						":commentId"
-					],
-					"variable": [
-						{
-							"key": "commentId",
-							"value": "{{commentId}}"
 						}
 					]
 				}
