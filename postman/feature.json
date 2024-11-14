@@ -641,12 +641,12 @@
 	"variable": [
 		{
 			"key": "userId",
-			"value": "1",
+			"value": "0",
 			"type": "string"
 		},
 		{
 			"key": "eventId",
-			"value": "1",
+			"value": "0",
 			"type": "string"
 		},
 		{
@@ -656,7 +656,7 @@
 		},
 		{
 			"key": "commentId",
-			"value": "1",
+			"value": "0",
 			"type": "string"
 		}
 	]
