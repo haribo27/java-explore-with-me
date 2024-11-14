@@ -43,6 +43,7 @@ public class EventServiceImpl implements EventService {
     private final RequestService requestService;
     private final EventMapper eventMapper;
     private final ApiClient apiClient;
+    private final CommentService commentService;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -70,7 +71,7 @@ public class EventServiceImpl implements EventService {
         event.setState(PENDING);
         event = eventRepository.save(event);
         log.info("Saved event: {}, id: {}", event, event.getId());
-        return eventMapper.mapToEventFullDto(event, new HashMap<>());
+        return eventMapper.mapToEventFullDto(event, new HashMap<>(), commentService);
     }
 
     @Override
@@ -81,7 +82,7 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList(),
                 findEarliestEvent(findEvents.stream().filter(event -> event.getState().equals(PUBLISHED)).toList()));
         return findEvents.stream()
-                .map(event -> eventMapper.mapToShortEventDto(event, viewsMap))
+                .map(event -> eventMapper.mapToShortEventDto(event, viewsMap, commentService))
                 .toList();
     }
 
@@ -118,7 +119,7 @@ public class EventServiceImpl implements EventService {
         Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList(),
                 findEarliestEvent(findEvents.stream().filter(event1 -> event1.getState().equals(PUBLISHED)).toList()));
         return findEvents
-                .stream().map(event1 -> eventMapper.mapToEventFullDto(event1, viewsMap))
+                .stream().map(event1 -> eventMapper.mapToEventFullDto(event1, viewsMap, commentService))
                 .toList();
     }
 
@@ -128,7 +129,7 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findEventByInitiator_IdAndId(userId, eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
-        return eventMapper.mapToEventFullDto(event, viewsMap);
+        return eventMapper.mapToEventFullDto(event, viewsMap, commentService);
     }
 
     @Override
@@ -142,7 +143,7 @@ public class EventServiceImpl implements EventService {
         event = eventRepository.save(event);
         log.info("Event updated and saved success {}", event);
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
-        return eventMapper.mapToEventFullDto(event, viewsMap);
+        return eventMapper.mapToEventFullDto(event, viewsMap, commentService);
     }
 
     @Override
@@ -173,7 +174,7 @@ public class EventServiceImpl implements EventService {
         }
         event = eventRepository.save(event);
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
-        return eventMapper.mapToEventFullDto(event, viewsMap);
+        return eventMapper.mapToEventFullDto(event, viewsMap, commentService);
     }
 
     private void checkEventDateIsValid(UpdateEventAdminRequest updateRequest, Event event) {
@@ -274,7 +275,7 @@ public class EventServiceImpl implements EventService {
         apiClient.sendHitRequestToApi(request);
         Map<Long, Long> viewsMap = getEventViewsMap(findEvents.stream().map(Event::getId).toList(),
                 findEarliestEvent(findEvents));
-        return findEvents.stream().map(event1 -> eventMapper.mapToShortEventDto(event1, viewsMap)).toList();
+        return findEvents.stream().map(event1 -> eventMapper.mapToShortEventDto(event1, viewsMap, commentService)).toList();
     }
 
     @Override
@@ -287,7 +288,7 @@ public class EventServiceImpl implements EventService {
             throw new EventStatusInvalid("Event must be PUBLISHED");
         }
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(id), findEarliestEvent(List.of(event)));
-        return eventMapper.mapToEventFullDto(event, viewsMap);
+        return eventMapper.mapToEventFullDto(event, viewsMap, commentService);
     }
 
     private Map<Long, Long> getEventViewsMap(List<Long> eventIds, LocalDateTime earliestEventDate) {

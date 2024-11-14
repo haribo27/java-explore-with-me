@@ -17,6 +17,9 @@ import ru.practicum.dto.mainservice.repository.EventRepository;
 import ru.practicum.dto.mainservice.repository.UserRepository;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -79,6 +82,12 @@ public class CommentServiceImpl implements CommentService {
                     " Only author of comment can delete.");
         }
         deleteComment(comment);
+    }
+
+    @Override
+    public Set<CommentDto> getEventComments(List<Long> eventIds) {
+        Set<Comment> comments = commentRepository.findCommentsByEventIdIn(eventIds);
+        return comments.stream().map(commentMapper::mapToDto).collect(Collectors.toSet());
     }
 
     private void deleteComment(Comment comment) {

@@ -20,6 +20,7 @@ public class Comment {
     @ManyToOne
     private User author;
     @ManyToOne
+    @JoinColumn(name = "event_id", nullable = false)
     private Event event;
     @Column(nullable = false)
     private LocalDateTime created;
