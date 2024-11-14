@@ -25,7 +25,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler({DataIntegrityViolationException.class, ConditionsAreNotMet.class})
-    public ResponseEntity<?> handleDataIntegrityViolationException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(Exception e) {
         log.warn("Logging exception {}, status {}", e.getMessage(), 409);
         return new ResponseEntity<>(new ErrorResponse("409", "Integrity constraint has been violated.",
                 e.getMessage()),
@@ -33,7 +33,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler({EntityNotFoundException.class, EventStatusInvalid.class})
-    public ResponseEntity<?> handleEntityNotFoundException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleEntityNotFoundException(Exception e) {
         log.warn("Logging exception {}, status {}", e.getMessage(), 404);
         return new ResponseEntity<>(new ErrorResponse("404", "The required object was not found.",
                 e.getMessage()),
@@ -41,7 +41,7 @@ public class ErrorHandler {
     }
 
     @ExceptionHandler
-    public ResponseEntity<?> handleException(Exception e) {
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
         log.warn("Logging exception {}, status {}", e.getMessage(), 500);
         return new ResponseEntity<>(new ErrorResponse("500", e.getMessage(), "Error"),
                 HttpStatus.INTERNAL_SERVER_ERROR);

@@ -38,9 +38,9 @@ public class EventController {
                                                                              @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime rangeEnd,
                                                                              @RequestParam(value = "onlyAvailable", required = false) Boolean onlyAvailable,
                                                                              @RequestParam(value = "sort", required = false) String sort,
-                                                                             @RequestParam(value = "from", defaultValue = "0", required = false)
+                                                                             @RequestParam(value = "from", defaultValue = "0")
                                                                              @PositiveOrZero Integer from,
-                                                                             @RequestParam(value = "size", defaultValue = "10", required = false)
+                                                                             @RequestParam(value = "size", defaultValue = "10")
                                                                              @Positive Integer size,
                                                                              HttpServletRequest request) {
         return ResponseEntity.ok(eventService.findEventsByParamsAndFilter(text, categories, paid,
