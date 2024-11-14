@@ -302,22 +302,7 @@
 					"listen": "prerequest",
 					"script": {
 						"exec": [
-							"// Получаем текущее значение переменной 'commentId'\r",
-							"let commentId = pm.collectionVariables.get(\"commentId\");\r",
-							"\r",
-							"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
-							"if (commentId !== undefined) {\r",
-							"    commentId = parseInt(commentId); // Преобразуем в число\r",
-							"    commentId++; // Увеличиваем на 1\r",
-							"} else {\r",
-							"    commentId = 1; // Начинаем с 1, если переменной нет\r",
-							"}\r",
-							"\r",
-							"// Сохраняем обновленное значение переменной в коллекции\r",
-							"pm.collectionVariables.set(\"commentId\", commentId);\r",
-							"\r",
-							"// Логирование для отладки\r",
-							"console.log(\"Новое значение commentId: \" + commentId);"
+							""
 						],
 						"type": "text/javascript",
 						"packages": {}
