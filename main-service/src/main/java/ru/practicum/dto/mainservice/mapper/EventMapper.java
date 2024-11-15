@@ -3,7 +3,6 @@ package ru.practicum.dto.mainservice.mapper;
 import org.mapstruct.*;
 import ru.practicum.dto.mainservice.dto.event.*;
 import ru.practicum.dto.mainservice.model.Event;
-import ru.practicum.dto.mainservice.util.EventMapperContext;
 
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EventMapper {
@@ -11,9 +10,9 @@ public interface EventMapper {
     @Mapping(target = "category", ignore = true)
     Event mapToEvent(RequestEventDto requestEventDto);
 
-    EventFullDto mapToEventFullDto(Event event, @Context EventMapperContext eventContext);
+    EventFullDto mapToEventFullDto(Event event, long viewsCount, long commentsCount);
 
-    EventShortDto mapToShortEventDto(Event event, @Context EventMapperContext eventContext);
+    EventShortDto mapToShortEventDto(Event event, long viewsCount, long commentsCount);
 
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "state", ignore = true)
@@ -26,15 +25,15 @@ public interface EventMapper {
     void updateEventAdminRequest(UpdateEventAdminRequest request, @MappingTarget Event event);
 
     @AfterMapping
-    default void addCommentsAndViewsToEventDto(@MappingTarget EventFullDto dto, @Context EventMapperContext eventContext) {
-        dto.setCommentsCount(eventContext.getCommentsCount().getOrDefault(dto.getId(), 0L));
-        dto.setViews(eventContext.getViewsMap().getOrDefault(dto.getId(), 0L));
+    default void addCommentsAndViewsToEventDto(@MappingTarget EventFullDto dto, long viewsCount, long commentsCount) {
+        dto.setCommentsCount(commentsCount);
+        dto.setViews(viewsCount);
     }
 
     @AfterMapping
-    default void setViews(@MappingTarget EventShortDto dto, @Context EventMapperContext eventContext) {
-        dto.setCommentsCount(eventContext.getCommentsCount().getOrDefault(dto.getId(), 0L));
-        dto.setViews(eventContext.getViewsMap().getOrDefault(dto.getId(), 0L));
+    default void setViews(@MappingTarget EventShortDto dto, long viewsCount, long commentsCount) {
+        dto.setCommentsCount(commentsCount);
+        dto.setViews(viewsCount);
     }
 
 

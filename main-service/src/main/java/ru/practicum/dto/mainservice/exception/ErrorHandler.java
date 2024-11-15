@@ -20,7 +20,7 @@ public class ErrorHandler {
             MissingServletRequestParameterException.class})
     public ResponseEntity<ErrorResponse> handleMethodArgumentNotValidException(Exception e) {
         log.warn("Logging exception {}, status: {}", e.getMessage(), 400);
-        return new ResponseEntity<>(new ErrorResponse("400", e.getMessage(),"Check you input data"),
+        return new ResponseEntity<>(new ErrorResponse("400", e.getMessage(), "Check you input data"),
                 HttpStatus.BAD_REQUEST);
     }
 

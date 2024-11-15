@@ -21,7 +21,6 @@ import ru.practicum.dto.mainservice.exception.IncorrectInputArguments;
 import ru.practicum.dto.mainservice.mapper.EventMapper;
 import ru.practicum.dto.mainservice.model.*;
 import ru.practicum.dto.mainservice.repository.*;
-import ru.practicum.dto.mainservice.util.EventMapperContext;
 import ru.practicum.dto.mainservice.viewsApiClient.ApiClient;
 
 import java.time.LocalDateTime;
@@ -70,7 +69,7 @@ public class EventServiceImpl implements EventService {
         event.setState(PENDING);
         event = eventRepository.save(event);
         log.info("Saved event: {}, id: {}", event, event.getId());
-        return eventMapper.mapToEventFullDto(event, new EventMapperContext(new HashMap<>(), new HashMap<>()));
+        return eventMapper.mapToEventFullDto(event, 0, 0);
     }
 
     @Override
@@ -82,7 +81,10 @@ public class EventServiceImpl implements EventService {
                 findEarliestEvent(findEvents.stream().filter(event -> event.getState().equals(PUBLISHED)).toList()));
         Map<Long, Long> commentsCount = getEventsCountMap(findEvents);
         return findEvents.stream()
-                .map(event -> eventMapper.mapToShortEventDto(event, new EventMapperContext(viewsMap, commentsCount)))
+                .map(event -> eventMapper.mapToShortEventDto(
+                        event,
+                        getViewsCountFromViewsMap(viewsMap, event),
+                        getCommentsCountFromCommentMap(commentsCount, event)))
                 .toList();
     }
 
@@ -120,7 +122,9 @@ public class EventServiceImpl implements EventService {
                 findEarliestEvent(findEvents.stream().filter(event1 -> event1.getState().equals(PUBLISHED)).toList()));
         Map<Long, Long> commentsCount = getEventsCountMap(findEvents);
         return findEvents
-                .stream().map(event1 -> eventMapper.mapToEventFullDto(event1, new EventMapperContext(viewsMap, commentsCount)))
+                .stream().map(event1 -> eventMapper.mapToEventFullDto(event1,
+                        getViewsCountFromViewsMap(viewsMap, event1),
+                        getCommentsCountFromCommentMap(commentsCount, event1)))
                 .toList();
     }
 
@@ -131,7 +135,10 @@ public class EventServiceImpl implements EventService {
                 .orElseThrow(() -> new EntityNotFoundException("Event with id=" + eventId + " not found"));
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
         Map<Long, Long> commentsCount = getEventsCountMap(List.of(event));
-        return eventMapper.mapToEventFullDto(event, new EventMapperContext(viewsMap, commentsCount));
+        return eventMapper.mapToEventFullDto(
+                event,
+                getViewsCountFromViewsMap(viewsMap, event),
+                getCommentsCountFromCommentMap(commentsCount, event));
     }
 
     @Override
@@ -146,7 +153,10 @@ public class EventServiceImpl implements EventService {
         log.info("Event updated and saved success {}", event);
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
         Map<Long, Long> commentsCount = getEventsCountMap(List.of(event));
-        return eventMapper.mapToEventFullDto(event, new EventMapperContext(viewsMap, commentsCount));
+        return eventMapper.mapToEventFullDto(
+                event,
+                getViewsCountFromViewsMap(viewsMap, event),
+                getCommentsCountFromCommentMap(commentsCount, event));
     }
 
     @Override
@@ -178,7 +188,10 @@ public class EventServiceImpl implements EventService {
         event = eventRepository.save(event);
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(eventId), findEarliestEvent(List.of(event)));
         Map<Long, Long> commentsCount = getEventsCountMap(List.of(event));
-        return eventMapper.mapToEventFullDto(event, new EventMapperContext(viewsMap, commentsCount));
+        return eventMapper.mapToEventFullDto(
+                event,
+                getViewsCountFromViewsMap(viewsMap, event),
+                getCommentsCountFromCommentMap(commentsCount, event));
     }
 
     private void checkEventDateIsValid(UpdateEventAdminRequest updateRequest, Event event) {
@@ -281,7 +294,9 @@ public class EventServiceImpl implements EventService {
                 findEarliestEvent(findEvents));
         Map<Long, Long> commentsCount = getEventsCountMap(findEvents);
         return findEvents.stream().map(event1 -> eventMapper
-                .mapToShortEventDto(event1, new EventMapperContext(viewsMap, commentsCount))).toList();
+                .mapToShortEventDto(event1,
+                        getViewsCountFromViewsMap(viewsMap, event1),
+                        getCommentsCountFromCommentMap(commentsCount, event1))).toList();
     }
 
     @Override
@@ -295,7 +310,10 @@ public class EventServiceImpl implements EventService {
         }
         Map<Long, Long> viewsMap = getEventViewsMap(List.of(id), findEarliestEvent(List.of(event)));
         Map<Long, Long> commentsCount = getEventsCountMap(List.of(event));
-        return eventMapper.mapToEventFullDto(event, new EventMapperContext(viewsMap, commentsCount));
+        return eventMapper.mapToEventFullDto(
+                event,
+                getViewsCountFromViewsMap(viewsMap, event),
+                getCommentsCountFromCommentMap(commentsCount, event));
     }
 
     private Map<Long, Long> getEventViewsMap(List<Long> eventIds, LocalDateTime earliestEventDate) {
@@ -352,10 +370,17 @@ public class EventServiceImpl implements EventService {
                 .toList());
         return projections.stream()
                 .collect(Collectors.toMap(
-                        EventCountCommentProjection::getId,  // Ключ — Long с ID события
-                        EventCountCommentProjection::getCommentCount  // Значение — Long с количеством комментариев
+                        EventCountCommentProjection::getId,
+                        EventCountCommentProjection::getCommentCount
                 ));
     }
 
+    private Long getViewsCountFromViewsMap(Map<Long, Long> viewsMap, Event event) {
+        return viewsMap.getOrDefault(event.getId(), 0L);
+    }
+
+    private Long getCommentsCountFromCommentMap(Map<Long, Long> commentsCount, Event event) {
+        return commentsCount.getOrDefault(event.getId(), 0L);
+    }
 
 }
