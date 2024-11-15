@@ -37,7 +37,7 @@ public class UserServiceImpl implements UserService {
         }
         User user = userMapper.mapToUser(userRequestDto);
         user = userRepository.save(user);
-        log.info("User saved success {}", user);
+        log.info("User saved success {} id: {}", user, user.getId());
         return userMapper.mapToUserDto(user);
     }
 

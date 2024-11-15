@@ -4,17 +4,15 @@ import org.mapstruct.*;
 import ru.practicum.dto.mainservice.dto.event.*;
 import ru.practicum.dto.mainservice.model.Event;
 
-import java.util.Map;
-
 @Mapper(componentModel = MappingConstants.ComponentModel.SPRING)
 public interface EventMapper {
 
     @Mapping(target = "category", ignore = true)
     Event mapToEvent(RequestEventDto requestEventDto);
 
-    EventFullDto mapToEventFullDto(Event event, @Context Map<Long, Long> viewsMap);
+    EventFullDto mapToEventFullDto(Event event, long viewsCount, long commentsCount);
 
-    EventShortDto mapToShortEventDto(Event event, @Context Map<Long, Long> viewsMap);
+    EventShortDto mapToShortEventDto(Event event, long viewsCount, long commentsCount);
 
     @Mapping(target = "category", ignore = true)
     @Mapping(target = "state", ignore = true)
@@ -27,12 +25,16 @@ public interface EventMapper {
     void updateEventAdminRequest(UpdateEventAdminRequest request, @MappingTarget Event event);
 
     @AfterMapping
-    default void setViews(@MappingTarget EventFullDto dto, @Context Map<Long, Long> viewsMap) {
-        dto.setViews(viewsMap.getOrDefault(dto.getId(), 0L));
+    default void addCommentsAndViewsToEventDto(@MappingTarget EventFullDto dto, long viewsCount, long commentsCount) {
+        dto.setCommentsCount(commentsCount);
+        dto.setViews(viewsCount);
     }
 
     @AfterMapping
-    default void setViews(@MappingTarget EventShortDto dto, @Context Map<Long, Long> viewsMap) {
-        dto.setViews(viewsMap.getOrDefault(dto.getId(), 0L));
+    default void setViews(@MappingTarget EventShortDto dto, long viewsCount, long commentsCount) {
+        dto.setCommentsCount(commentsCount);
+        dto.setViews(viewsCount);
     }
+
+
 }

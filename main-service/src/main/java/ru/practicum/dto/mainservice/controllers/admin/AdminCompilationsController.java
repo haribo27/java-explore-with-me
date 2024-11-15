@@ -31,7 +31,7 @@ public class AdminCompilationsController {
     }
 
     @DeleteMapping("/{comId}")
-    public ResponseEntity<?> deleteCompilation(@PathVariable long comId) {
+    public ResponseEntity<Void> deleteCompilation(@PathVariable long comId) {
         compilationService.deleteCompilation(comId);
         return ResponseEntity.noContent().build();
     }

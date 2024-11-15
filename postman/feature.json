@@ -1,0 +1,531 @@
+{
+	"info": {
+		"_postman_id": "68891296-1fd5-4d62-9033-872c40a04dc2",
+		"name": "Comments test",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "36411619"
+	},
+	"item": [
+		{
+			"name": "Успешное добавление нового комментария",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"// Получаем текущее значение переменной 'commentId'\r",
+							"let commentId = pm.collectionVariables.get(\"commentId\");\r",
+							"\r",
+							"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
+							"if (commentId !== undefined) {\r",
+							"    commentId = parseInt(commentId); // Преобразуем в число\r",
+							"    commentId++; // Увеличиваем на 1\r",
+							"} else {\r",
+							"    commentId = 1; // Начинаем с 1, если переменной нет\r",
+							"}\r",
+							"\r",
+							"// Сохраняем обновленное значение переменной в коллекции\r",
+							"pm.collectionVariables.set(\"commentId\", commentId);\r",
+							"\r",
+							"// Логирование для отладки\r",
+							"console.log(\"Новое значение commentId: \" + commentId);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 201\", function () {\r",
+							"    pm.response.to.have.status(201);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Тело ответа присутствует и имеет формат JSON\", function () {\r",
+							"    pm.expect(pm.response.text()).not.to.be.empty; \r",
+							"    pm.response.to.have.jsonBody();              \r",
+							"});\r",
+							"\r",
+							"pm.test(\"Ответ содержит обязательные поля\", function () {\r",
+							"    var jsonResponse = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(jsonResponse).to.have.property(\"id\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"text\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"author\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"event\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"created\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json",
+						"type": "text"
+					},
+					{
+						"key": "Accept",
+						"value": "application/json",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\": \"Отличное событие\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/users/:userId/events/:eventId/comments",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						":userId",
+						"events",
+						":eventId",
+						"comments"
+					],
+					"variable": [
+						{
+							"key": "userId",
+							"value": "{{userId}}"
+						},
+						{
+							"key": "eventId",
+							"value": "{{eventId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Создание комментария с text.lenght = 0",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\": \"\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/users/11/events/7/comments"
+			},
+			"response": []
+		},
+		{
+			"name": "Создание комментария с length > 5000",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.environment.set(\"longString\", 'a'.repeat(5001));"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\": \"{{longString}}\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/users/11/events/7/comments"
+			},
+			"response": []
+		},
+		{
+			"name": "Попытка отправить запрос с не верными параметрами в запросе",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 400\", function () {\r",
+							"    pm.response.to.have.status(400);\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\": \"Кекс\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/users/:userId/events/7/comments",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"users",
+						":userId",
+						"events",
+						"7",
+						"comments"
+					],
+					"variable": [
+						{
+							"key": "userId",
+							"value": "sdfddsf"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Попытка добавить комментарий к не существующему событию",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Тело ответа присутствует и имеет формат JSON\", function () {\r",
+							"    pm.expect(pm.response.text()).not.to.be.empty; \r",
+							"    pm.response.to.have.jsonBody();              \r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"text\": \"Кекс\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": "{{baseUrl}}/users/11/events/70000/comments"
+			},
+			"response": []
+		},
+		{
+			"name": "Получение комментария по id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 200\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Тело ответа присутствует и имеет формат JSON\", function () {\r",
+							"    pm.expect(pm.response.text()).not.to.be.empty; \r",
+							"    pm.response.to.have.jsonBody();              \r",
+							"});\r",
+							"\r",
+							"pm.test(\"Ответ содержит обязательные поля\", function () {\r",
+							"    var jsonResponse = pm.response.json();\r",
+							"    \r",
+							"    pm.expect(jsonResponse).to.have.property(\"id\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"text\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"author\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"event\");\r",
+							"    pm.expect(jsonResponse).to.have.property(\"created\");\r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{baseUrl}}/events/comments/{{commentId}}"
+			},
+			"response": []
+		},
+		{
+			"name": "Попытка получить не существующий комментарий",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Тело ответа присутствует и имеет формат JSON\", function () {\r",
+							"    pm.expect(pm.response.text()).not.to.be.empty; \r",
+							"    pm.response.to.have.jsonBody();              \r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "{{baseUrl}}/events/comments/80000000"
+			},
+			"response": []
+		},
+		{
+			"name": "Удаление комментария админом",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 204\", function () {\r",
+							"    pm.response.to.have.status(204);\r",
+							"});\r",
+							"let currentUserId = parseInt(pm.collectionVariables.get(\"commentId\") || \"1\", 10);\r",
+							"\r",
+							"// Увеличиваем значения переменных на 1\r",
+							"pm.collectionVariables.set(\"commentId\", currentUserId + 1);"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/admin/events/comments/:commentId",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"admin",
+						"events",
+						"comments",
+						":commentId"
+					],
+					"variable": [
+						{
+							"key": "commentId",
+							"value": "{{commentId}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Удаление не существующего комментария админом",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Статус-код 404\", function () {\r",
+							"    pm.response.to.have.status(404);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Тело ответа присутствует и имеет формат JSON\", function () {\r",
+							"    pm.expect(pm.response.text()).not.to.be.empty; \r",
+							"    pm.response.to.have.jsonBody();              \r",
+							"});"
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				},
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": "{{baseUrl}}/admin/events/comments/800000000"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					"// Получаем текущее значение переменной 'userId'\r",
+					"let userId = pm.collectionVariables.get(\"userId\");\r",
+					"\r",
+					"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
+					"if (userId !== undefined) {\r",
+					"    userId = parseInt(userId); // Преобразуем в число\r",
+					"    userId++; // Увеличиваем на 1\r",
+					"} else {\r",
+					"    // Если переменная не существует, начнем с 1\r",
+					"    userId = 1;\r",
+					"}\r",
+					"\r",
+					"// Сохраняем обновленное значение переменной в коллекции\r",
+					"pm.collectionVariables.set(\"userId\", userId);\r",
+					"\r",
+					"// Логирование для отладки\r",
+					"console.log(\"Новое значение userId: \" + userId);\r",
+					"// Получаем текущее значение переменной 'eventId'\r",
+					"let eventId = pm.collectionVariables.get(\"eventId\");\r",
+					"\r",
+					"// Проверяем, существует ли переменная и увеличиваем её на 1\r",
+					"if (eventId !== undefined) {\r",
+					"    eventId = parseInt(eventId); // Преобразуем в число\r",
+					"    eventId++; // Увеличиваем на 1\r",
+					"} else {\r",
+					"    eventId = 1; // Начинаем с 1, если переменной нет\r",
+					"}\r",
+					"\r",
+					"// Сохраняем обновленное значение переменной в коллекции\r",
+					"pm.collectionVariables.set(\"eventId\", eventId);\r",
+					"\r",
+					"// Логирование для отладки\r",
+					"console.log(\"Новое значение eventId: \" + eventId);"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "userId",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "eventId",
+			"value": "0",
+			"type": "string"
+		},
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080",
+			"type": "string"
+		},
+		{
+			"key": "commentId",
+			"value": "0",
+			"type": "string"
+		}
+	]
+}

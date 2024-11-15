@@ -38,7 +38,7 @@ public class Event {
     @Column(nullable = false, length = 120)
     private String title;
     @Formula("(SELECT COUNT(r.id) FROM requests r WHERE r.event_id = id AND r.status = 'CONFIRMED')")
-    private int confirmedRequests;  // Это поле будет хранить количество подтвержденных заявок
+    private int confirmedRequests;
     @Column(name = "created_on", nullable = false)
     private LocalDateTime createdOn;
     @Column(name = "published_on")

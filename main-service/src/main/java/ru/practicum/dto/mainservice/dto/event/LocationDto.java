@@ -14,5 +14,6 @@ public class LocationDto {
     private Double lat;
     @Min(value = -180)
     @Max(value = 180)
+    @NotNull
     private Double lon;
 }
