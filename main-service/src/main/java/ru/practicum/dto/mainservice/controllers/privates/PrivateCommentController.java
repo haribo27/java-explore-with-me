@@ -8,16 +8,17 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.dto.mainservice.dto.comment.CommentDto;
 import ru.practicum.dto.mainservice.dto.comment.CommentRequestDto;
+import ru.practicum.dto.mainservice.dto.comment.UpdateCommentDto;
 import ru.practicum.dto.mainservice.service.CommentService;
 
 @Controller
-@RequestMapping
+@RequestMapping("/users")
 @RequiredArgsConstructor
-public class CommentController {
+public class PrivateCommentController {
 
     private final CommentService commentService;
 
-    @PostMapping("/users/{userId}/events/{eventId}/comments")
+    @PostMapping("/{userId}/events/{eventId}/comments")
     public ResponseEntity<CommentDto> saveComment(@RequestBody @Valid CommentRequestDto commentRequestDto,
                                                   @PathVariable long userId,
                                                   @PathVariable long eventId) {
@@ -25,20 +26,16 @@ public class CommentController {
                 HttpStatus.CREATED);
     }
 
-    @GetMapping("/events/comments/{commentId}")
-    public ResponseEntity<CommentDto> getComment(@PathVariable long commentId) {
-        return ResponseEntity.ok(commentService.getComment(commentId));
-    }
-
-    @DeleteMapping("/admin/events/comments/{commentId}")
-    public ResponseEntity<Void> adminDeleteComment(@PathVariable long commentId) {
-        commentService.adminDeleteComment(commentId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @DeleteMapping("/users/{userId}/events/comments/{commentId}")
+    @DeleteMapping("/{userId}/events/comments/{commentId}")
     public ResponseEntity<Void> userDeleteComment(@PathVariable long userId, @PathVariable long commentId) {
         commentService.userDeleteComment(userId, commentId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/{userId}/events/comments/{commentId}")
+    public ResponseEntity<CommentDto> updateComment(@RequestBody @Valid UpdateCommentDto request,
+                                                    @PathVariable long userId,
+                                                    @PathVariable long commentId) {
+        return ResponseEntity.ok(commentService.updateComment(request, userId, commentId));
     }
 }

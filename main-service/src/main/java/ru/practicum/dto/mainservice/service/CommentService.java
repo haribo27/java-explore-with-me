@@ -2,9 +2,9 @@ package ru.practicum.dto.mainservice.service;
 
 import ru.practicum.dto.mainservice.dto.comment.CommentDto;
 import ru.practicum.dto.mainservice.dto.comment.CommentRequestDto;
+import ru.practicum.dto.mainservice.dto.comment.UpdateCommentDto;
 
 import java.util.List;
-import java.util.Set;
 
 public interface CommentService {
 
@@ -16,5 +16,7 @@ public interface CommentService {
 
     void userDeleteComment(long userId, long commentId);
 
-    Set<CommentDto> getEventComments(List<Long> eventsIds);
+    List<CommentDto> getEventComments(long eventId, Integer from, Integer size);
+
+    CommentDto updateComment(UpdateCommentDto request, long userId, long commentId);
 }
