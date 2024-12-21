@@ -1,2 +1,1 @@
-# java-explore-with-me
-Template repository for ExploreWithMe project.
+Мой проект, который представляет из себя простой аналог Яндекс афиши.
